@@ -1,0 +1,52 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+title: "site_features.Rmd"
+author: "charlotte"
+date: "8/3/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=TRUE,echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(sm)
+```
+
+```{r colnames,echo=FALSE}
+#colnames <- c("depth","fracphased","frach","MAF","MAF_phased","nC","fracC","Cavgbq","Cfrach","Cavgmapq","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cavgind","CfracXT","CavgASXS","Navgbq","Nfrach","Navgmapq","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Navgind","NfracXT","NavgASXS","weightedCbq","MavgXL","MavgXV","MavgXR","MavgXB","Mavgbq","Mavgmapq","Mavgpos","Mavgclip","Mavgind","MfracXT","MavgASXS","weightedMbq","JavgXL","JavgXV","JavgXR","JavgXB","Javgbq","Javgmapq","Javgpos","Javgclip","Javgind","JfracXT","JavgASXS","MAFnorm","fracOtherAllele")
+
+#colnames1 <- c("depth","fracphased","frach","MAF","MAF_phased","nC","fracC","Cavgbq","Cfrach","CMAF","Cavgpos","Cavgclip","Cavgind","CavgASXS","Navgbq","Nfrach","NMAF","Navgpos","Navgclip","Navgind","NavgASXS","weightedCbq","Mavgbq","Mavgpos","Mavgclip","Mavgind","MavgASXS","weightedMbq","Javgbq","Javgpos","Javgclip","Javgind","JavgASXS")
+
+colnames <- c("chrom","pos","score","depth","fracphased","fracstrand","frach","MAF","MAF_phased","nC","fracC","Cavgbq","Cfrach","Cavgmapq","Cfracstrand","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cavgind","Cfracclip","Cfracind","CfracXT","CavgASXS","Navgbq","Nfrach","Navgmapq","Nfracstrand","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Nfracind","Navgind","NfracXT","NavgASXS","weightedCbq","Cavgibq","Mavgbq","Mavgmapq","Mfracstrand","Mavgpos","Mavgclip","Mavgind","Mfracclip","Mfracind","Mavgibq","weightedMbq","MfracXT","MavgASXS","Javgbq","Javgmapq","Jfracstrand","Javgpos","Javgclip","Javgind","Jfracclip","Jfracind","JfracXT","JavgASXS","MAFnorm","fracOtherAllele")
+
+colnames2 <- c("chrom","pos","depth","fracphased","frach","MAF","MAF_phased","MAFh0","MAFh1","fracC","Cfrach","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cfracclip","Cavgind","Cfracind","Nfrach","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Navgind","Nfracind","Mavgpos","Mavgclip","Mfracclip","Mavgind","Mfracind","Javgpos","Javgclip","Jfracclip","Javgind","Jfracind","MAFnorm")
+```
+
+```{r readdata, echo=FALSE}
+features <- read.delim("~/Documents/lab/mosaiccaller_scripts/testdata/cex/filteringfeatures_norepeat.txtscan_norepeat1.bed.filteringfeatures",col.names=colnames2) #sorted in rank order
+
+
+
+features <- read.delim("~/Documents/lab/mosaiccaller_scripts/testdata/cex/filteringfeatures_norepeat.txtscan_norepeat1.bed.filteringfeatures",col.names=colnames)
+
+
+```
+
+```{r densities,echo=FALSE}
+for (i in c(3:12,17:23,28:43)) {
+  plot(density(features[,i]),xlab=colnames2[i])
+}
+```
+
+
+```{r densities1,echo=FALSE}
+L <- sapply(features$MAF, function(x) floor(x*20))
+
+for (i in c(4:59)) {
+  sm.density.compare(features[,i],L,xlab=colnames2[i],col=c(gray(seq(0.9,0,-0.05))),lty=rep(1,21))
+}
+
+```

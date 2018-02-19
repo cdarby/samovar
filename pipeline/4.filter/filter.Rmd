@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+
+calls <- read.delim("~/Documents/lab/mosaiccaller_scripts/testdata/cex/filteringfeatures_norepeat.txtscan_norepeat1.bed.filteringfeatures", header=FALSE,sep="\t",col.names=c("chrom","pos","depth","fracphased","frach","MAF","MAF_phased","MAFh0","MAFh1","fracC","Cfrach","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cfracclip","Cavgind","Cfracind","Nfrach","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Navgind","Nfracind","Mavgpos","Mavgclip","Mfracclip","Mavgind","Mfracind","Javgpos","Javgclip","Jfracclip","Javgind","Jfracind","MAFnorm"))
+
+colnames <- c("chrom","pos","score","fracphased","fracstrand","frach","MAF","MAF_phased","nC","fracC","Cavgbq","Cfrach","Cavgmapq","Cfracstrand","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cavgind","Cfracclip","Cfracind","CfracXT","CavgASXS","Navgbq","Nfrach","Navgmapq","Nfracstrand","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Nfracind","Navgind","NfracXT","NavgASXS","weightedCbq","Cavgibq","Mavgbq","Mavgmapq","Mfracstrand","Mavgpos","Mavgclip","Mavgind","Mfracclip","Mfracind","Mavgibq","weightedMbq","MfracXT","MavgASXS","Javgbq","Javgmapq","Jfracstrand","Javgpos","Javgclip","Javgind","Jfracclip","Jfracind","JfracXT","JavgASXS","MAFnorm","fracOtherAllele")
+
+calls <- read.delim("~/Documents/lab/mosaiccaller_scripts/testdata/cex/scan_abbr_filterfeatures_95.txt",header=FALSE,sep="\t",col.names=colnames)
+calls$depth <- calls$nC/calls$fracC
+#Level 1
+#length(calls$pos[calls$fracC>0 & calls$fracphased>0 & calls$Cfracclip<1 & calls$Mfracclip<1 & calls$frach != 0 & calls$frach != 1 & calls$MAFh0 != 1 & calls$MAFh1 != 1 & calls$Cfracind<1 & calls$Mfracind<1 & (calls$Cfrach == 1 | calls$Cfrach == 0)])
+lvl1 <- calls[calls$fracC>0 & calls$fracphased>0 & calls$Cfracclip<1 & calls$Mfracclip<1 & calls$frach != 0 & calls$frach != 1 & calls$Cfracind<1 & calls$Mfracind<1 & (calls$Cfrach == 1 | calls$Cfrach == 0),]
+
+#Level 2: Magic numbers
+#length(calls$pos[calls$fracC>0 & calls$fracphased>0 & calls$Cfracclip<1 & calls$Mfracclip<1 & calls$frach != 0 & calls$frach != 1 & calls$MAFh0 != 1 & calls$MAFh1 != 1 & calls$Cfracind<1 & calls$Mfracind<1 & (calls$Cfrach == 1 | calls$Cfrach == 0) & calls$Mavgpos>10 & calls$Cavgpos>10 & calls$frach<0.7 & calls$frach > 0.3])
+
+lvl2 <- calls[calls$fracC>0 & calls$fracphased>0 & calls$Cfracclip<1 & calls$Mfracclip<1 & calls$frach != 0 & calls$frach != 1 & calls$Cfracind<1 & calls$Mfracind<1 & (calls$Cfrach == 1 | calls$Cfrach == 0) & calls$Mavgpos>10 & calls$Cavgpos>10 & calls$frach<0.7 & calls$frach > 0.3 & calls$CfracXT < 1 & calls$MfracXT < 1 & calls$Cfracstrand < 1 & calls$Cfracstrand > 0 & calls$Mfracstrand < 1 & calls$Mfracstrand > 0 ,]
+
+#calls$CavgXB > 10000
+
+#How many are filtered by this one clause
+# length(calls$pos[calls$fracC==0])
+# length(calls$pos[calls$fracphased==0])
+# length(calls$pos[calls$Cfracclip==1])
+# length(calls$pos[calls$Mfracclip==1])
+# length(calls$pos[calls$Cfracind==1])
+# length(calls$pos[calls$Mfracind==1])
+# length(calls$pos[calls$frach==1 | calls$frach==0])
+# length(calls$pos[calls$MAFh0 == 1 | calls$MAFh1 == 1])
+# length(calls$pos[calls$Cfrach != 1 & calls$Cfrach != 0])
+# 
+# length(calls$pos[calls$Mavgpos<=10])
+# length(calls$pos[calls$Cavgpos<=10])
+# length(calls$pos[calls$frach>=0.7 | calls$frach <= 0.3])
+
+#Level 3: MAF and fraction-phased "detection limit"
+lvl3 <- lvl2[lvl2$MAF>0.05 & lvl2$fracphased > 0.7 & lvl2$depth > 16 & lvl2$nC > 4,]
+
+#write.table(lvl3,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/lvl3_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F) 
+write.table(lvl3[lvl3$MAF < 0.1,][order(lvl3$score[lvl3$MAF<0.1],decreasing=T),],file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/5_10_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.1 & lvl3$MAF < 0.15,][order(lvl3$score[lvl3$MAF >= 0.1 & lvl3$MAF < 0.15],decreasing=T),], file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/10_15_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.15 & lvl3$MAF < 0.2,][order(lvl3$score[lvl3$MAF >= 0.15 & lvl3$MAF < 0.2],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/15_20_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.2 & lvl3$MAF < 0.25,][order(lvl3$score[lvl3$MAF >= 0.2 & lvl3$MAF < 0.25],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/20_25_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.25 & lvl3$MAF < 0.3,][order(lvl3$score[lvl3$MAF >= 0.25 & lvl3$MAF < 0.3],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/25_30_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.30 & lvl3$MAF < 0.35,][order(lvl3$score[lvl3$MAF >= 0.3 & lvl3$MAF < 0.35],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/30_35_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.35 & lvl3$MAF < 0.4,][order(lvl3$score[lvl3$MAF >= 0.35 & lvl3$MAF < 0.4],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/35_40_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.40 & lvl3$MAF < 0.45,][order(lvl3$score[lvl3$MAF >= 0.4 & lvl3$MAF < 0.45],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/40_45_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+write.table(lvl3[lvl3$MAF >= 0.45,][order(lvl3$score[lvl3$MAF >= 0.45],decreasing=T),] ,file="~/Documents/lab/mosaiccaller_scripts/testdata/cex/45_50_cex.tsv",row.names=F,col.names=F,sep="\t",quote=F)
+
+```

@@ -1,0 +1,153 @@
+`10XSARCOMA0.bam`
+
+```
+976871256 + 0 in total (QC-passed reads + QC-failed reads)
+19094968 + 0 secondary
+0 + 0 supplementary
+2892666 + 0 duplicates
+950545556 + 0 mapped (97.31% : N/A)
+957776288 + 0 paired in sequencing
+478888144 + 0 read1
+478888144 + 0 read2
+844633100 + 0 properly paired (88.19% : N/A)
+923340120 + 0 with itself and mate mapped
+8110468 + 0 singletons (0.85% : N/A)
+54069280 + 0 with mate mapped to a different chr
+42573013 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+375443074/950545556 = 39% reads phased by Longranger
+19094968/(950545556+19094968) = 2% of alignments hard-clipped
+
+`10XSARCOMA10.bam`
+
+```
+954243130 + 0 in total (QC-passed reads + QC-failed reads)
+17228298 + 0 secondary
+0 + 0 supplementary
+3330275 + 0 duplicates
+927222955 + 0 mapped (97.17% : N/A)
+937014832 + 0 paired in sequencing
+468507416 + 0 read1
+468507416 + 0 read2
+826551566 + 0 properly paired (88.21% : N/A)
+901193550 + 0 with itself and mate mapped
+8801107 + 0 singletons (0.94% : N/A)
+47128428 + 0 with mate mapped to a different chr
+37091650 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+508253798/927222955 = 55% reads phased by longranger
+
+`10XSARCOMA1.bam`
+
+```
+952749815 + 0 in total (QC-passed reads + QC-failed reads)
+16179431 + 0 secondary
+0 + 0 supplementary
+3662090 + 0 duplicates
+927273407 + 0 mapped (97.33% : N/A)
+936570384 + 0 paired in sequencing
+468285192 + 0 read1
+468285192 + 0 read2
+834221020 + 0 properly paired (89.07% : N/A)
+903946548 + 0 with itself and mate mapped
+7147428 + 0 singletons (0.76% : N/A)
+42273774 + 0 with mate mapped to a different chr
+32108798 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+487319718/927273407 = 52% reads phased by longranger
+
+`10XSARCOMA2.bam`
+
+```
+950303762 + 0 in total (QC-passed reads + QC-failed reads)
+17244044 + 0 secondary
+0 + 0 supplementary
+3071070 + 0 duplicates
+927045756 + 0 mapped (97.55% : N/A)
+933059718 + 0 paired in sequencing
+466529859 + 0 read1
+466529859 + 0 read2
+827552496 + 0 properly paired (88.69% : N/A)
+902857146 + 0 with itself and mate mapped
+6944566 + 0 singletons (0.74% : N/A)
+47565200 + 0 with mate mapped to a different chr
+36433079 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+453583973/927045756 = 50%
+
+`10XSARCOMA3.bam`
+
+```
+931512857 + 0 in total (QC-passed reads + QC-failed reads)
+15893123 + 0 secondary
+0 + 0 supplementary
+3541025 + 0 duplicates
+907474498 + 0 mapped (97.42% : N/A)
+915619734 + 0 paired in sequencing
+457809867 + 0 read1
+457809867 + 0 read2
+813470876 + 0 properly paired (88.84% : N/A)
+884230566 + 0 with itself and mate mapped
+7350809 + 0 singletons (0.80% : N/A)
+42756464 + 0 with mate mapped to a different chr
+31311903 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+422632865/907474498 = 46%
+
+`10XSARCOMA6.bam`
+
+```
+958861923 + 0 in total (QC-passed reads + QC-failed reads)
+16586447 + 0 secondary
+0 + 0 supplementary
+3490682 + 0 duplicates
+933850334 + 0 mapped (97.39% : N/A)
+942275476 + 0 paired in sequencing
+471137738 + 0 read1
+471137738 + 0 read2
+839529452 + 0 properly paired (89.10% : N/A)
+909962504 + 0 with itself and mate mapped
+7301383 + 0 singletons (0.77% : N/A)
+43480836 + 0 with mate mapped to a different chr
+32458545 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+449424541/933850334 = 48%
+
+`10XSARCOMA9.bam`
+
+```
+974437808 + 0 in total (QC-passed reads + QC-failed reads)
+17578060 + 0 secondary
+0 + 0 supplementary
+3067572 + 0 duplicates
+948372177 + 0 mapped (97.33% : N/A)
+956859748 + 0 paired in sequencing
+478429874 + 0 read1
+478429874 + 0 read2
+847491154 + 0 properly paired (88.57% : N/A)
+922839908 + 0 with itself and mate mapped
+7954209 + 0 singletons (0.83% : N/A)
+48354770 + 0 with mate mapped to a different chr
+36349789 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+401673574/948372177 = 42%
+
+`10XSARCOMAC1.bam`
+
+```
+944303340 + 0 in total (QC-passed reads + QC-failed reads)
+15761670 + 0 secondary
+0 + 0 supplementary
+3232767 + 0 duplicates
+915133438 + 0 mapped (96.91% : N/A)
+928541670 + 0 paired in sequencing
+464270835 + 0 read1
+464270835 + 0 read2
+824247232 + 0 properly paired (88.77% : N/A)
+890085694 + 0 with itself and mate mapped
+9286074 + 0 singletons (1.00% : N/A)
+40981860 + 0 with mate mapped to a different chr
+29270071 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+392028871/915133438 = 43%

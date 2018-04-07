@@ -83,6 +83,7 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Cfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,ind)]) / nC
 	CfracXT = 1.0*np.compress(mask,XT).sum()/nC
 	CavgASXS = 1.0*np.compress(mask,ASXS).sum()/nC
+	Cavgpair = 1.0*np.compress(mask,paired).sum()/nC
 
 	mask_inv = [False if (mask[i] or XH[i] == None or (bases[i] != major and bases[i] != minor)) else True for i in range(depth) ]
 	nN = sum(mask_inv)
@@ -101,17 +102,18 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	bases_ranked = sorted(basecounts, key=lambda x:x[1])
 	NMAF = 1.0*bases_ranked[-1][1]/depth
 
-	NavgXL = 1.0*np.compress(mask,XL).sum()/nN
-	NavgXV = 1.0*np.compress(mask,XV).sum()/nN
-	NavgXR = 1.0*np.compress(mask,XR).sum()/nN
-	NavgXB = 1.0*np.compress(mask,XB).sum()/nN
-	Navgpos = 1.0*np.compress(mask,readpos).sum()/nN
-	Navgclip = 1.0*np.compress(mask,clip).sum()/nN
-	Navgind = 1.0*np.compress(mask,ind).sum()/nN
-	Nfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,clip)]) / nN
-	Nfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,ind)]) / nN
+	NavgXL = 1.0*np.compress(mask_inv,XL).sum()/nN
+	NavgXV = 1.0*np.compress(mask_inv,XV).sum()/nN
+	NavgXR = 1.0*np.compress(mask_inv,XR).sum()/nN
+	NavgXB = 1.0*np.compress(mask_inv,XB).sum()/nN
+	Navgpos = 1.0*np.compress(mask_inv,readpos).sum()/nN
+	Navgclip = 1.0*np.compress(mask_inv,clip).sum()/nN
+	Navgind = 1.0*np.compress(mask_inv,ind).sum()/nN
+	Nfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_inv,clip)]) / nN
+	Nfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_inv,ind)]) / nN
 	NfracXT = 1.0*np.compress(mask_inv,XT).sum()/nN
 	NavgASXS = 1.0*np.compress(mask_inv,ASXS).sum()/nN
+	Navgpair = 1.0*np.compress(mask_inv,paired).sum()/nN
 
 	fracC = 1.0*nC/(nN+nC)
 	weightedCbq = 1.0*nC*Cavgbq/(nC*Cavgbq+nN*Navgbq)
@@ -129,6 +131,7 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Mfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_M,ind)]) / nminor
 	MfracXT = 1.0*np.compress(mask_M,XT).sum()/nminor
 	MavgASXS = 1.0*np.compress(mask_M,ASXS).sum()/nminor
+	Mavgpair = 1.0*np.compress(mask_M,paired).sum()/nminor
 
 	mask_J = [True if bases[i] == major else False for i in range(depth)]
 	Javgbq = 1.0*np.compress(mask_J,bqs).sum()/nmajor
@@ -141,16 +144,18 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Jfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_J,ind)]) / nmajor
 	JfracXT = 1.0*np.compress(mask_J,XT).sum()/nmajor
 	JavgASXS = 1.0*np.compress(mask_J,ASXS).sum()/nmajor
+	Navgpair = 1.0*np.compress(mask_J,paired).sum()/nmajor
 
 	weightedMbq = 1.0*np.compress(mask_M,bqs).sum()/(Mavgbq * nminor + Javgbq * nmajor)
 	Mavgibq = 1-weightedMbq #Should rm this feature - redundant. 
 	
 	features = [depth,fracphased,fracstrand,frach,MAF,MAF_phased,
-		nC,fracC,Cavgbq,Cfrach,Cavgmapq,Cfracstrand,CMAF,CavgXL,CavgXV,CavgXR,CavgXB,Cavgpos,Cavgclip,Cavgind,Cfracclip,Cfracind,CfracXT,CavgASXS,
-		Navgbq,Nfrach,Navgmapq,Nfracstrand,NMAF,NavgXL,NavgXV,NavgXR,NavgXB,Navgpos,Navgclip,Nfracclip,Nfracind,Navgind,NfracXT,NavgASXS,
+		nC,fracC,Cavgbq,Cfrach,Cavgmapq,Cfracstrand,CMAF,CavgXL,CavgXV,CavgXR,CavgXB,Cavgpos,Cavgclip,Cavgind,Cfracclip,Cfracind,CfracXT,CavgASXS,Cavgpair,
+		Navgbq,Nfrach,Navgmapq,Nfracstrand,NMAF,NavgXL,NavgXV,NavgXR,NavgXB,Navgpos,Navgclip,Nfracclip,Nfracind,Navgind,NfracXT,NavgASXS,Navgpair,
 		weightedCbq,Cavgibq,
-		Mavgbq,Mavgmapq,Mfracstrand,Mavgpos,Mavgclip,Mavgind,Mfracclip,Mfracind,Mavgibq,weightedMbq,MfracXT,MavgASXS,
-		Javgbq,Javgmapq,Jfracstrand,Javgpos,Javgclip,Javgind,Jfracclip,Jfracind,JfracXT,JavgASXS,MAFnorm,fracOtherAllele]
+		Mavgbq,Mavgmapq,Mfracstrand,Mavgpos,Mavgclip,Mavgind,Mfracclip,Mfracind,Mavgibq,weightedMbq,MfracXT,MavgASXS,Mavgpair,
+		Javgbq,Javgmapq,Jfracstrand,Javgpos,Javgclip,Javgind,Jfracclip,Jfracind,JfracXT,JavgASXS,Javgpair,
+		MAFnorm,fracOtherAllele]
 
 	return features
 
@@ -215,6 +220,7 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 			clip = []
 			ind = []
 			strands = []
+			paired = []
 
 			XH = []
 			XL = []
@@ -238,7 +244,8 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 				mapqs.append(aln.mapping_quality)
 				readpos.append(min((aln.query_alignment_end - pileupread.query_position_or_next),(pileupread.query_position_or_next - aln.query_alignment_start)))
 				clip.append(aln.query_length - len(aln.query_alignment_sequence))
-
+				if aln.is_proper_pair: paired.append(0)
+				else: paired.append(1)
 				if aln.is_reverse: strands.append(0)
 				else: strands.append(1)
 				
@@ -284,6 +291,6 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 			if depth <= 0: 
 				continue
 
-			featurevector = siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, XT, ASXS)
+			featurevector = siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, XT, ASXS, paired)
 			if featurevector is not None:
 				pymp_context.print(chrom + "\t" + str(start) + "\t" + clfscore + "\t" + "\t".join([str(x) for x in featurevector]))

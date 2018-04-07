@@ -4,14 +4,7 @@
 #Python 2.7.13 (tested 01-24-18)
 #Python 3.6.2 (tested 01-24-18)
 
-'''
-could remove next round of pruning:
-depth
-"pos" features
-"frach" features
-J features
-N features (x/ MAF)
-'''
+#Remove the ASXS feature and substitute "PH" tag for "HP" tag.
 
 from __future__ import print_function
 
@@ -27,7 +20,7 @@ from collections import namedtuple
 
 NT = "ACGT"
 
-def readIntervalFile(fname,simMode,hetMode,homMode):
+def readIntervalFile(fname,simMode):
     R = []
     with open(fname) as varfile:
         region = varfile.readline().strip().split()
@@ -36,17 +29,11 @@ def readIntervalFile(fname,simMode,hetMode,homMode):
                 region = varfile.readline().strip().split()
                 continue
             chrom = region[0]
-            site = int(region[1]) - 1 #vcf is 1-indexed
+            site = int(region[1])
             if simMode: 
                 vaf = float(region[2])
-                site += 1 #was 0-indexed
-            elif hetMode: 
-                if len(region[3]) != 1 or len(region[4]) != 1 or "PASS" not in region[6] or ("0|1" not in region[9] and "1|0" not in region[9]):
-                    region = varfile.readline().strip().split()
-                    continue
-                vaf = None
-            elif homMode: 
-                if len(region[3]) != 1 or len(region[4]) != 1 or "PASS" not in region[6] or ("0|0" not in region[9] and "1|1" not in region[9]):
+            else: 
+                if len(region[3]) != 1 or len(region[4]) != 1 or "PASS" not in region[6]:
                     region = varfile.readline().strip().split()
                     continue
                 vaf = None
@@ -60,16 +47,16 @@ def readFeatures(read):
     for (op,ln) in read.cigartuples:
         if op == 1 or op == 2 or op == 3:
             ind += ln
-    ASXS = read.get_tag("AS") - read.get_tag("XS")
-    if read.has_tag("HP"):
-        XH = read.get_tag("HP")-1
+    if read.has_tag("PH"):
+        XH = read.get_tag("PH")-1
     else:
         XH = None       
-    return (clip,ind,XH,ASXS)  
+    return (clip,ind,XH)  
 
 
 def siteFeatures(S,vaf,simMode):
-    (bases, bqs, readpos, clip, ind, XH, ASXS) = (S.bases, S.bqs, S.readpos, S.clip, S.ind, S.XH,  S.ASXS)
+    (bases, bqs, readpos, clip, ind, XH) = (S.bases, S.bqs, S.readpos, S.clip, S.ind, S.XH)
+
     depth = len(bases)
     if depth == 0: 
         return None
@@ -129,8 +116,8 @@ def siteFeatures(S,vaf,simMode):
     fracOtherAllele = 1.0*(depth - nmajor - nminor)/depth
     #MAFnorm = abs(0.25-MAF)
     MAF_phased = 0.0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if bases[i] != major and XH[i] != None])/nphased #MAF of phased reads
-    MAF_h0 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 0 and bases[i] == minor])/nphased
-    MAF_h1 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 1 and bases[i] == minor])/nphased
+    #MAF_h0 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 0 and bases[i] == minor])/nphased
+    #MAF_h1 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 1 and bases[i] == minor])/nphased
 
     #linked features
     #Reads that need to be changed in the allele x haplotype matrix
@@ -167,7 +154,6 @@ def siteFeatures(S,vaf,simMode):
     Cavgpos = 1.0*np.compress(mask,readpos).sum()/nC
     Cavgclip = 1.0*np.compress(mask,clip).sum()/nC
     Cavgind = 1.0*np.compress(mask,ind).sum()/nC
-    CavgASXS = 1.0*np.compress(mask,ASXS).sum()/nC
 
     mask_inv = [False if (mask[i] or XH[i] == None or (bases[i] != major and bases[i] != minor)) else True for i in range(depth) ]
     nN = sum(mask_inv)
@@ -186,7 +172,6 @@ def siteFeatures(S,vaf,simMode):
     Navgpos = 1.0*np.compress(mask_inv,readpos).sum()/nN
     Navgclip = 1.0*np.compress(mask_inv,clip).sum()/nN
     Navgind = 1.0*np.compress(mask_inv,ind).sum()/nN
-    NavgASXS = 1.0*np.compress(mask_inv,ASXS).sum()/nN
 
     fracC = 1.0*nC/(nN+nC)
     weightedCbq = 1.0*nC*Cavgbq/(nC*Cavgbq+nN*Navgbq)
@@ -197,24 +182,22 @@ def siteFeatures(S,vaf,simMode):
     Mavgpos = 1.0*np.compress(mask_M,readpos).sum()/nminor
     Mavgclip = 1.0*np.compress(mask_M,clip).sum()/nminor
     Mavgind = 1.0*np.compress(mask_M,ind).sum()/nminor
-    MavgASXS = 1.0*np.compress(mask_M,ASXS).sum()/nminor
 
     mask_J = [True if bases[i] == major else False for i in range(depth)]
     Javgbq = 1.0*np.compress(mask_J,bqs).sum()/nmajor
     Javgpos = 1.0*np.compress(mask_J,readpos).sum()/nmajor
     Javgclip = 1.0*np.compress(mask_J,clip).sum()/nmajor
     Javgind = 1.0*np.compress(mask_J,ind).sum()/nmajor
-    JavgASXS = 1.0*np.compress(mask_J,ASXS).sum()/nmajor
 
     weightedMbq = 1.0*np.compress(mask_M,bqs).sum()/(Mavgbq * nminor + Javgbq * nmajor)
 
     features = np.array([depth,fracphased,frach,MAF,MAF_phased,
         nC,fracC,Cavgbq,Cfrach,CMAF,
-        Cavgpos,Cavgclip,Cavgind,CavgASXS,Navgbq,
+        Cavgpos,Cavgclip,Cavgind,Navgbq,
         Nfrach,NMAF,Navgpos,Navgclip,Navgind,
-        NavgASXS,weightedCbq,Mavgbq,Mavgpos,Mavgclip,
-        Mavgind,MavgASXS,weightedMbq,Javgbq,Javgpos,
-        Javgclip,Javgind,JavgASXS])
+        weightedCbq,Mavgbq,Mavgpos,Mavgclip,
+        Mavgind,weightedMbq,Javgbq,Javgpos,
+        Javgclip,Javgind])
     return features
 
 
@@ -224,51 +207,44 @@ parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--varfile', help='Input varfile name (.varfile if --simulate True, otherwise .vcf)',required=True)
 #parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
 parser.add_argument('--simulate', help='Specify iff simulation mode',action='store_true')
-parser.add_argument('--het', help='Specify iff vcf is given and want het sites',action='store_true')
-parser.add_argument('--hom', help='Specify iff vcf is given and want hom sites',action='store_true')
 parser.add_argument('--max', help='Maximum sites to (successfully) simulate',required=False,default=None)
 parser.add_argument('--nproc',help="parallelism",required=False,default=3)
-args = parser.parse_args()
 
+args = parser.parse_args()
 nproc = int(args.nproc)
-Site = namedtuple('Site','pos bases bqs readpos clip ind XH ASXS')
+Site = namedtuple('Site','pos bases bqs readpos clip ind XH')
 simMode = args.simulate
-hetMode = args.het
-homMode = args.hom
 maxdata = int(1.0*int(args.max)/nproc) if args.max is not None else None #divide equally instead of "shared counter" construct 
 
 N = 0
-R = readIntervalFile(args.varfile,simMode,hetMode,homMode)
+R = readIntervalFile(args.varfile,simMode)
+sys.stderr.write("Read interval file\n")
 with pymp.Parallel(nproc,if_=(nproc > 1)) as pymp_context:
     samfile = pysam.AlignmentFile(args.bam, "rb")
     for region_index in pymp_context.xrange(len(R)): #pymp.xrange returns an iterator and corresponds to dynamic scheduling.
         (chrom,site,vaf) = R[region_index]     
         #samfile = pysam.AlignmentFile(args.bam, "rb")
         try:
-            #print(pymp_context.thread_num)
             for pileupcolumn in samfile.pileup(chrom, site, site+1): #what if not a valid chrom.
                 refpos = pileupcolumn.pos
                 if refpos < site:
                     continue
                 if refpos > site:
                     break
-                S = Site(refpos,[],[],[],[],[],[],[])
+                S = Site(refpos,[],[],[],[],[],[])
                 for pileupread in pileupcolumn.pileups:
                     read = pileupread.alignment
                     if read.is_duplicate or read.is_qcfail or read.is_secondary or read.is_supplementary: continue #aln.is_unmapped or 
                     querypos = pileupread.query_position
                     if querypos is None: continue
-
                     #Features for the whole read
-                    (clip,ind,XH,ASXS) = readFeatures(read)
+                    (clip,ind,XH) = readFeatures(read)
                     S.bases.append(read.query_sequence[querypos])
                     S.bqs.append(read.query_qualities[querypos])
                     S.readpos.append(min((read.query_alignment_end - querypos),(querypos - read.query_alignment_start)))
                     S.clip.append(clip)
                     S.ind.append(ind)
                     S.XH.append(XH)
-                    S.ASXS.append(ASXS)
-
                 feature_vector = siteFeatures(S,vaf,simMode)
                 if feature_vector is not None:
                     pymp_context.print("\t".join([str(x) for x in feature_vector]))

@@ -4,9 +4,18 @@
 #Python 2.7.13 (tested 01-24-18)
 #Python 3.6.2 (tested 01-24-18)
 
+'''
+could remove next round of pruning:
+depth
+"pos" features
+"frach" features
+J features
+N features (x/ MAF)
+'''
+
 from __future__ import print_function
 
-import pysam,argparse,pymp,os,sys
+import pysam,argparse,os,sys,random,pymp
 
 if sys.version_info > (3,0):
     import _pickle as cPickle
@@ -15,34 +24,46 @@ else:
 
 import numpy as np
 from collections import namedtuple
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.externals import joblib
 
-def readIntervalFile(fname):
+NT = "ACGT"
+
+def readIntervalFile(fname,simMode):
     R = []
-    with open(fname) as bedfile:
-        region = bedfile.readline().strip().split()
+    with open(fname) as varfile:
+        region = varfile.readline().strip().split()
         while len(region) > 0:
-            R.append(region)
-            region = bedfile.readline().strip().split()
+            if "#" in region[0]:
+                region = varfile.readline().strip().split()
+                continue
+            chrom = region[0]
+            site = int(region[1]) - 1 #vcf is 1-indexed
+            if simMode: 
+                vaf = float(region[2])
+                site += 1 #was 0-indexed
+            else: 
+                if len(region[3]) != 1 or len(region[4]) != 1 or "PASS" not in region[6]:
+                    region = varfile.readline().strip().split()
+                    continue
+                vaf = None
+            R.append([chrom,site,vaf])
+            region = varfile.readline().strip().split()
     return R
 
 def readFeatures(read):
     clip = read.query_length - len(read.query_alignment_sequence)
     ind = 0
-    C = read.cigartuples
-    if C is not None: #When is it None? 
-        for (op,ln) in C:
-            if op == 1 or op == 2 or op == 3:
-                ind += ln
+    for (op,ln) in read.cigartuples:
+        if op == 1 or op == 2 or op == 3:
+            ind += ln
     ASXS = read.get_tag("AS") - read.get_tag("XS")
     if read.has_tag("HP"):
-        XH = read.get_tag("HP")
+        XH = read.get_tag("HP")-1
     else:
         XH = None       
-    return (clip,ind,XH,ASXS) 
+    return (clip,ind,XH,ASXS)  
 
-def siteFeatures(S):
+
+def siteFeatures(S,vaf,simMode):
     (bases, bqs, readpos, clip, ind, XH, ASXS) = (S.bases, S.bqs, S.readpos, S.clip, S.ind, S.XH,  S.ASXS)
 
     depth = len(bases)
@@ -61,20 +82,52 @@ def siteFeatures(S):
     frach = max(frach0,frach1)
     
     values, counts = np.unique(bases,return_counts=True)
-    if len(values) == 1: return None #no minor allele bases
+    #if len(values) == 1: return None #no minor allele bases
     basecounts = zip(values,counts)
     bases_ranked = sorted(basecounts, key=lambda x:x[1])
     major = bases_ranked[-1][0] #most frequent nt
+
+    if simMode:
+        if len(values) == 1: 
+            minor = major
+            while minor == major:
+                minor = NT[random.randint(0,3)] #both bounds inclusive
+        else:
+            minor = bases_ranked[-2][0] #if bases_ranked[-2][0] != "N" else bases_ranked[-3][0]
+    
+        new_bases = []
+        for (i,b) in enumerate(bases):
+            if b != major or XH[i] == 0: 
+                new_bases.append(b)
+            elif XH[i] is None:
+                if random.random() < vaf/2: #assume non-haplotyped reads are distributed equally on h1 and h0
+                    new_bases.append(minor)
+                else:
+                    new_bases.append(b)    
+            else: # XH[i] == 1:
+                if random.random() < vaf: 
+                    new_bases.append(minor)
+                else:
+                    new_bases.append(b)
+        bases = new_bases
+
+        values, counts = np.unique(bases,return_counts=True)
+        #if len(values) == 1: return None #no minor allele bases
+        basecounts = zip(values,counts)
+        bases_ranked = sorted(basecounts, key=lambda x:x[1])
+        major = bases_ranked[-1][0] #most frequent nt
+
+    if len(values) == 1: return None #no minor allele bases
     minor = bases_ranked[-2][0] #if bases_ranked[-2][0] != "N" else bases_ranked[-3][0]
     nmajor = bases_ranked[-1][1]
     nminor = bases_ranked[-2][1] #if bases_ranked[-2][0] != "N" else bases_ranked[-3][1]
     MAF = 1.0*nminor/depth
-    #fracOtherAllele = 1.0*(depth - nmajor - nminor)/depth
+    fracOtherAllele = 1.0*(depth - nmajor - nminor)/depth
     #MAFnorm = abs(0.25-MAF)
     MAF_phased = 0.0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if bases[i] != major and XH[i] != None])/nphased #MAF of phased reads
     MAF_h0 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 0 and bases[i] == minor])/nphased
     MAF_h1 = 0 if nphased == 0 else 1.0*sum([1 for i in range(depth) if XH[i] == 1 and bases[i] == minor])/nphased
-    
+
     #linked features
     #Reads that need to be changed in the allele x haplotype matrix
     change_to_hom_mask = [True if (XH[i] != None and bases[i] == minor) else False for i in range(depth)] #ignore non major/minor bases
@@ -160,120 +213,58 @@ def siteFeatures(S):
         Javgclip,Javgind,JavgASXS])
     return features
 
-#1-9,11,16-18,20-22,24,29-31,33-34,39,41-43,45-46,51,53-55,57
 
-parser = argparse.ArgumentParser(description='python classifySiteFromDictTuple.py')
+
+parser = argparse.ArgumentParser(description='python simulateSitesFromDict.py')
 parser.add_argument('--bam', help='Input bam file name',required=True)
-parser.add_argument('--bed', help='Input bed file name',required=True)
-#parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
-parser.add_argument('--clf',help="random forest scikit-learn classifier",required=True)
+parser.add_argument('--varfile', help='Input varfile name (.varfile if --simulate True, otherwise .vcf)',required=True)
+parser.add_argument('--subsample', help='fraction of depth to retain' ,required=True)
+parser.add_argument('--simulate', help='Specify iff simulation mode',action='store_true')
+parser.add_argument('--max', help='Maximum sites to (successfully) simulate',required=False,default=None)
 parser.add_argument('--nproc',help="parallelism",required=False,default=3)
 
 args = parser.parse_args()
-R = readIntervalFile(args.bed)
+nproc = int(args.nproc)
 Site = namedtuple('Site','pos bases bqs readpos clip ind XH ASXS')
-
-
-NPAR = int(args.nproc)
-READBATCH = 100000
-CLFBATCH = 10000
-PRINT_TH = 0.9
-NFEAT = 33
-
-clf = joblib.load(args.clf)
-samfile = pysam.AlignmentFile(args.bam, "rb") #could do this per-parallel if bamfile is split
-
-with pymp.Parallel(NPAR,if_=(NPAR > 1)) as pymp_context:
+simMode = args.simulate
+maxdata = int(1.0*int(args.max)/nproc) if args.max is not None else None #divide equally instead of "shared counter" construct 
+subsample = float(args.subsample)
+N = 0
+R = readIntervalFile(args.varfile,simMode)
+with pymp.Parallel(nproc) as pymp_context:
+    samfile = pysam.AlignmentFile(args.bam, "rb")
     for region_index in pymp_context.xrange(len(R)): #pymp.xrange returns an iterator and corresponds to dynamic scheduling.
-        region = R[region_index]     
-        chrom = region[0]
-        start = int(region[1])
-        end = int(region[2])
-        predictionArray = np.empty([CLFBATCH,NFEAT]) #batch of feature vectors ready for prediction
-        positionsPredicted = [] #bp positions of rows in predictionArray
-        nPred = 0
-        SITES = dict()
-        last_site_eval = -1
-        nreads = 0
-
-        for read in samfile.fetch(chrom, start, end, multiple_iterators=True): 
-            #Each iteration returns a AlignedSegment object which represents a single read along with its fields and optional tags - Returns in order by start alignment position
-            if read.is_duplicate or read.is_qcfail or read.is_secondary or read.is_supplementary: continue # or aln.is_unmapped
-            nreads += 1
-            
-            #Features for the whole read
-            (clip,ind,XH,ASXS) = readFeatures(read)
-
-            aligned_pairs = read.get_aligned_pairs()
-            for p in aligned_pairs:
-                if p[0] == None or p[1] == None:# or read.query_sequence[p[0]] == "N":
+        (chrom,site,vaf) = R[region_index]     
+        #samfile = pysam.AlignmentFile(args.bam, "rb")
+        try:
+            for pileupcolumn in samfile.pileup(chrom, site, site+1): #what if not a valid chrom.
+                refpos = pileupcolumn.pos
+                if refpos < site:
                     continue
-                querypos = p[0]
-                refpos = p[1]
+                if refpos > site:
+                    break
+                S = Site(refpos,[],[],[],[],[],[],[])
+                for pileupread in pileupcolumn.pileups:
+                    if random.random() > subsample: continue
+                    read = pileupread.alignment
+                    if read.is_duplicate or read.is_qcfail or read.is_secondary or read.is_supplementary: continue #aln.is_unmapped or 
+                    querypos = pileupread.query_position
+                    if querypos is None: continue
 
-                if refpos in SITES:
-                    S = SITES[refpos]
-                else:
-                    #S = Site(refpos)
-                    S = Site(refpos,[],[],[],[],[],[],[])
-                    SITES[refpos] = S
+                    #Features for the whole read
+                    (clip,ind,XH,ASXS) = readFeatures(read)
+                    S.bases.append(read.query_sequence[querypos])
+                    S.bqs.append(read.query_qualities[querypos])
+                    S.readpos.append(min((read.query_alignment_end - querypos),(querypos - read.query_alignment_start)))
+                    S.clip.append(clip)
+                    S.ind.append(ind)
+                    S.XH.append(XH)
+                    S.ASXS.append(ASXS)
 
-                S.bases.append(read.query_sequence[querypos])
-                S.bqs.append(read.query_qualities[querypos])
-                S.readpos.append(min((read.query_alignment_end - querypos),(querypos - read.query_alignment_start)))
-                S.clip.append(clip)
-                S.ind.append(ind)
-                S.XH.append(XH)
-                S.ASXS.append(ASXS)
-
-            if nreads >= READBATCH: #batch size for evaluating sites where all reads seen 
-                L = len(SITES)
-                for refpos in range(max(last_site_eval+1,start), min(read.reference_start,end)):
-                    if refpos in SITES:
-                        S = SITES[refpos]
-                    else: continue #eek!
-
-                    feature_vector = siteFeatures(S)
-                    if type(feature_vector) != type(None):
-                        predictionArray[nPred] = feature_vector
-                        nPred += 1
-                        positionsPredicted.append(refpos)
-                    del SITES[S.pos]
-
-                    if nPred == CLFBATCH:
-                        p = clf.predict_proba(predictionArray)
-                        for i in range(len(p)):
-                            if p[i][1] >= PRINT_TH:
-                                #continue
-                                pymp_context.print(chrom + "\t" + str(positionsPredicted[i]) + "\t" + str(positionsPredicted[i]+1) + "\t" + str(round(p[i][1],5)) + "\t" + str(round(predictionArray[i][3],3)))
-                        positionsPredicted = [] #bp positions of rows in predictionArray
-                        nPred = 0
-
-                last_site_eval = read.reference_start - 1
-                nreads = 0
-        for (refpos,S) in SITES.items(): #After batches, finish remaining reads
-            if refpos < start or refpos >= end: continue
-            feature_vector = siteFeatures(S)
-            if type(feature_vector) != type(None):
-                predictionArray[nPred] = feature_vector
-                nPred += 1
-                positionsPredicted.append(refpos)
-
-            if nPred == CLFBATCH:
-                p = clf.predict_proba(predictionArray)
-                for i in range(len(p)):
-                    if p[i][1] >= PRINT_TH:
-                        #continue
-                        pymp_context.print(chrom + "\t" + str(positionsPredicted[i]) + "\t" + str(positionsPredicted[i]+1) + "\t" + str(round(p[i][1],5)) + "\t" + str(round(predictionArray[i][3],3)))
-                positionsPredicted = [] #bp positions of rows in predictionArray
-                nPred = 0
-
-        if nPred > 0: #After last partial-batch of reads, clf remaining feature vectors
-            p = clf.predict_proba(predictionArray[:nPred])
-            for i in range(nPred):
-                if p[i][1] >= PRINT_TH:
-                        #continue
-                        pymp_context.print(chrom + "\t" + str(positionsPredicted[i]) + "\t" + str(positionsPredicted[i]+1) + "\t" + str(round(p[i][1],5)) + "\t" + str(round(predictionArray[i][3],3)))
-                        #pymp_context.print(chrom + "\t" + str(positionsPredicted[i]) + " " + str(round(p[i][1],3))+ " " + str(round(predictionArray[i][4],3)) + " " + str(predictionArray[i][0]) + " " + str(round(predictionArray[i][1],3)))
-        #pymp_context.print("*" + chrom + "*" + str(start) + "*" + str(end) + "*")
-
+                feature_vector = siteFeatures(S,vaf,simMode)
+                if feature_vector is not None:
+                    pymp_context.print("\t".join([str(x) for x in feature_vector]))
+                    N += 1
+        except ValueError: #not a valid chrom
+            continue
+        if maxdata is not None and N > maxdata: break

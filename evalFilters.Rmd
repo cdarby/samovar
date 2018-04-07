@@ -1,0 +1,493 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+
+NB <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/HCCPair/completefeatures/scanNB_norepeat_labeled.features.tsv",sep="\t",header=F)
+NE <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/HCCPair/completefeatures/scanNE_norepeat_labeled.features.tsv",sep="\t",header=F)
+TB <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/HCCPair/completefeatures/scanTB_norepeat_labeled.features.tsv",sep="\t",header=F)
+TE <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/HCCPair/completefeatures/scanTE_norepeat_labeled.features.tsv",sep="\t",header=F)
+
+
+colnames <- c("status","id","chrom","pos","score","depth","fracphased","fracstrand","frach","MAF","MAF_phased",
+              "nC","fracC","Cavgbq","Cfrach","Cavgmapq","Cfracstrand","CMAF","CavgXL","CavgXV","CavgXR","CavgXB","Cavgpos","Cavgclip","Cavgind","Cfracclip","Cfracind","CavgASXS","Cavgpair",
+              "Navgbq","Nfrach","Navgmapq","Nfracstrand","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Nfracind","Navgind","NavgASXS","Navgpair",
+              "weightedCbq","Cavgibq",
+              "Mavgbq","Mavgmapq","Mfracstrand","Mavgpos","Mavgclip","Mavgind","Mfracclip","Mfracind","Mavgibq","weightedMbq","MavgASXS","Mavgpair",
+              "Javgbq","Javgmapq","Jfracstrand","Javgpos","Javgclip","Javgind","Jfracclip","Jfracind","JavgASXS","Javgpair","MAFnorm","fracOtherAllele")
+
+colnames(NB)<-colnames
+colnames(NE)<-colnames
+colnames(TB)<-colnames
+colnames(TE)<-colnames
+
+
+
+
+```
+
+```{r}
+calls <- NB
+
+
+#NONE FILTERED
+#length(calls$status[calls$fracC>0])
+#length(calls$status[calls$fracphased>0])
+#Nfracclip; Jfracclip; fracind; Javgpos
+
+print("Cfracclip")
+length(calls$status[calls$Cfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracclip")
+length(calls$status[calls$Mfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracclip")
+length(calls$status[calls$Nfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Nfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracclip")
+length(calls$status[calls$Jfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Jfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status < 1]) #number of negatives filtered
+print("Cfracind")
+length(calls$status[calls$Cfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracind")
+length(calls$status[calls$Mfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracind")
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Nfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracind")
+length(calls$status[calls$Jfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Jfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Cfrach")
+length(calls$status[calls$frach <= 0.9 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$frach <= 0.9 & calls$status < 1]) #number of negatives filtered
+print("Cfrach (strict)")
+length(calls$status[calls$frach != 1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$frach != 1 & calls$status < 1]) #number of negatives filtered
+print("Cavgpos")
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Mavgpos")
+length(calls$status[calls$Mavgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+#print("Navgpos")
+#length(calls$status[calls$Navgpos <= 10 & calls$status == 1]) #Number of positives filtered
+#length(calls$status[calls$Navgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Javgpos")
+length(calls$status[calls$Javgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status < 1]) #number of negatives filtered
+print("Cavgpair")
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Mavgpair")
+length(calls$status[calls$Mavgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Navgpair")
+length(calls$status[calls$Navgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Navgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Javgpair")
+length(calls$status[calls$Javgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Javgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Cfracstrand")
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Mfracstrand")
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Nfracstrand")
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Jfracstrand")
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("maf")
+length(calls$status[calls$MAF <= 0.05 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status < 1]) #number of negatives filtered
+print("fracphased")
+length(calls$status[calls$fracphased <= 0.7 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status < 1]) #number of negatives filtered
+print("otherallele")
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status < 1]) #number of negatives filtered
+print("depth")
+length(calls$status[calls$depth < 16 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$depth < 16 & calls$status < 1]) #number of negatives filtered
+print("nC")
+length(calls$status[calls$nC < 4 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$nC < 4 & calls$status < 1]) #number of negatives filtered
+
+```
+
+```{r}
+calls <- NE
+
+
+#NONE FILTERED
+#length(calls$status[calls$fracC>0])
+#length(calls$status[calls$fracphased>0])
+#Nfracclip; Jfracclip; fracind; Javgpos
+
+print("Cfracclip")
+length(calls$status[calls$Cfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracclip")
+length(calls$status[calls$Mfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracclip")
+length(calls$status[calls$Nfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Nfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracclip")
+length(calls$status[calls$Jfracclip==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Jfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status < 1]) #number of negatives filtered
+print("Cfracind")
+length(calls$status[calls$Cfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracind")
+length(calls$status[calls$Mfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracind")
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Nfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracind")
+length(calls$status[calls$Jfracind==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Jfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Cfrach")
+length(calls$status[calls$frach <= 0.9 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$frach <= 0.9 & calls$status < 1]) #number of negatives filtered
+print("Cfrach (strict)")
+length(calls$status[calls$frach != 1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$frach != 1 & calls$status < 1]) #number of negatives filtered
+print("Cavgpos")
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Mavgpos")
+length(calls$status[calls$Mavgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+#print("Navgpos")
+#length(calls$status[calls$Navgpos <= 10 & calls$status == 1]) #Number of positives filtered
+#length(calls$status[calls$Navgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Javgpos")
+length(calls$status[calls$Javgpos <= 10 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status < 1]) #number of negatives filtered
+print("Cavgpair")
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Cavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Mavgpair")
+length(calls$status[calls$Mavgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Mavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Navgpair")
+length(calls$status[calls$Navgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Navgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Javgpair")
+length(calls$status[calls$Javgpair==1 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$Javgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Cfracstrand")
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Mfracstrand")
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Nfracstrand")
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Jfracstrand")
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status == 1]) #Number of positives filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("maf")
+length(calls$status[calls$MAF <= 0.05 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status < 1]) #number of negatives filtered
+print("fracphased")
+length(calls$status[calls$fracphased <= 0.7 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status < 1]) #number of negatives filtered
+print("otherallele")
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status < 1]) #number of negatives filtered
+print("depth")
+length(calls$status[calls$depth < 16 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$depth < 16 & calls$status < 1]) #number of negatives filtered
+print("nC")
+length(calls$status[calls$nC < 4 & calls$status == 1]) #Number of positives filtered
+length(calls$status[calls$nC < 4 & calls$status < 1]) #number of negatives filtered
+
+```
+
+```{r}
+calls <- TB
+
+
+#NONE FILTERED
+#length(calls$status[calls$fracC>0])
+#length(calls$status[calls$fracphased>0])
+#Nfracclip; Jfracclip; fracind; Javgpos
+
+print("Cfracclip")
+length(calls$status[calls$Cfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Cfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracclip")
+length(calls$status[calls$Mfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracclip")
+length(calls$status[calls$Nfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Nfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Nfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracclip")
+length(calls$status[calls$Jfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Jfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Jfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status < 1]) #number of negatives filtered
+print("Cfracind")
+length(calls$status[calls$Cfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Cfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracind")
+length(calls$status[calls$Mfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracind")
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Nfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracind")
+length(calls$status[calls$Jfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Jfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Jfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Cfrach")
+length(calls$status[calls$frach <= 0.9 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$frach <= 0.9 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$frach <= 0.9 & calls$status < 1]) #number of negatives filtered
+print("Cfrach (strict)")
+length(calls$status[calls$frach != 1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$frach != 1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$frach != 1 & calls$status < 1]) #number of negatives filtered
+print("Cavgpos")
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Mavgpos")
+length(calls$status[calls$Mavgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+#print("Navgpos")
+#length(calls$status[calls$Navgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+#length(calls$status[calls$Navgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Javgpos")
+length(calls$status[calls$Javgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status < 1]) #number of negatives filtered
+print("Cavgpair")
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Cavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Mavgpair")
+length(calls$status[calls$Mavgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mavgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Navgpair")
+length(calls$status[calls$Navgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Navgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Navgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Javgpair")
+length(calls$status[calls$Javgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Javgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Javgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Cfracstrand")
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Mfracstrand")
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Nfracstrand")
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Jfracstrand")
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("maf")
+length(calls$status[calls$MAF <= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status < 1]) #number of negatives filtered
+print("fracphased")
+length(calls$status[calls$fracphased <= 0.7 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status < 1]) #number of negatives filtered
+print("otherallele")
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status < 1]) #number of negatives filtered
+print("depth")
+length(calls$status[calls$depth < 16 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$depth < 16 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$depth < 16 & calls$status < 1]) #number of negatives filtered
+print("nC")
+length(calls$status[calls$nC < 4 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$nC < 4 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$nC < 4 & calls$status < 1]) #number of negatives filtered
+
+```
+
+```{r}
+calls <- TE
+
+
+#NONE FILTERED
+#length(calls$status[calls$fracC>0])
+#length(calls$status[calls$fracphased>0])
+#Nfracclip; Jfracclip; fracind; Javgpos
+
+# print("scorelinkage")
+# length(calls$status[calls$scorelinkage <= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+# length(calls$status[calls$scorelinkage <= 0.05 & calls$status > 1]) #Number of positive real filtered
+# length(calls$status[calls$scorelinkage <= 0.05 & calls$status < 1]) #number of negatives filtered
+# print("scorelinkageadj")
+# length(calls$status[calls$scorelinkagead <= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+# length(calls$status[calls$scorelinkagead <= 0.05 & calls$status > 1]) #Number of positive real filtered
+# length(calls$status[calls$scorelinkagead <= 0.05 & calls$status < 1]) #number of negatives filtered
+
+print("Cfracclip")
+length(calls$status[calls$Cfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Cfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracclip")
+length(calls$status[calls$Mfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracclip")
+length(calls$status[calls$Nfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Nfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Nfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracclip")
+length(calls$status[calls$Jfracclip==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Jfracclip==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Jfracclip==1 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$frach == 0 | calls$frach == 1) & calls$status < 1]) #number of negatives filtered
+print("Cfracind")
+length(calls$status[calls$Cfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Cfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Mfracind")
+length(calls$status[calls$Mfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Nfracind")
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Nfracind==1 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Nfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Jfracind")
+length(calls$status[calls$Jfracind==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Jfracind==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Jfracind==1 & calls$status < 1]) #number of negatives filtered
+print("Cfrach")
+length(calls$status[calls$frach <= 0.9 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$frach <= 0.9 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$frach <= 0.9 & calls$status < 1]) #number of negatives filtered
+print("Cfrach (strict)")
+length(calls$status[calls$frach != 1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$frach != 1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$frach != 1 & calls$status < 1]) #number of negatives filtered
+print("Cavgpos")
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Cavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Mavgpos")
+length(calls$status[calls$Mavgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mavgpos <= 10 & calls$status < 1]) #number of negatives filtered
+#print("Navgpos")
+#length(calls$status[calls$Navgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+#length(calls$status[calls$Navgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("Javgpos")
+length(calls$status[calls$Javgpos <= 10 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Javgpos <= 10 & calls$status < 1]) #number of negatives filtered
+print("frach")
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$frach >= 0.7 | calls$frach <= 0.3) & calls$status < 1]) #number of negatives filtered
+print("Cavgpair")
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Cavgpair==1 & calls$status == 1]) #Number of positive real filtered
+length(calls$status[calls$Cavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Mavgpair")
+length(calls$status[calls$Mavgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Mavgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Mavgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Navgpair")
+length(calls$status[calls$Navgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Navgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Navgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Javgpair")
+length(calls$status[calls$Javgpair==1 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$Javgpair==1 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$Javgpair==1 & calls$status < 1]) #number of negatives filtered
+print("Cfracstrand")
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Cfracstrand==1 | calls$Cfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Mfracstrand")
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Mfracstrand==1 | calls$Mfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Nfracstrand")
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Nfracstrand==1 | calls$Nfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("Jfracstrand")
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status > 1]) #Number of positive real filtered
+length(calls$status[(calls$Jfracstrand==1 | calls$Jfracstrand == 0) & calls$status < 1]) #number of negatives filtered
+print("maf")
+length(calls$status[calls$MAF <= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$MAF <= 0.05 & calls$status < 1]) #number of negatives filtered
+print("fracphased")
+length(calls$status[calls$fracphased <= 0.7 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$fracphased <= 0.7 & calls$status < 1]) #number of negatives filtered
+print("otherallele")
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$fracOtherAllele >= 0.05 & calls$status < 1]) #number of negatives filtered
+print("depth")
+length(calls$status[calls$depth < 16 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$depth < 16 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$depth < 16 & calls$status < 1]) #number of negatives filtered
+print("nC")
+length(calls$status[calls$nC < 4 & calls$status == 1]) #Number of positive bamsurgeon filtered
+length(calls$status[calls$nC < 4 & calls$status > 1]) #Number of positive real filtered
+length(calls$status[calls$nC < 4 & calls$status < 1]) #number of negatives filtered
+```

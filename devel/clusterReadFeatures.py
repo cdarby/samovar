@@ -2,7 +2,7 @@
 #updated 02-01-18
 from __future__ import print_function
 
-import pysam,argparse,sys,string
+import pysam,argparse,sys,string,random
 import numpy as np
 from sklearn.cluster import KMeans
 
@@ -77,7 +77,7 @@ for region in R:
 
 			#base and base quality
 			if pileupread.is_del and not pileupread.is_refskip:
-				continue     
+				continue     #should do something with indels at the site in question?
 			
 			thisReadFeatures = []	
 
@@ -119,9 +119,11 @@ for region in R:
 			'''
 			readNames.append(aln.query_name)
 			qstart = aln.query_alignment_start	
-			if pileupStart is None or qstart < pileupStart: pileupStart = qstart
-			qend = aln.query_alignment_end		
-			if pileupEnd is None or qend > pileupEnd: pileupEnd = qend
+			rstart = aln.reference_start
+			if pileupStart is None or rstart < pileupStart: pileupStart = rstart
+			qend = aln.query_alignment_end
+			rend = aln.reference_end		
+			if pileupEnd is None or rend > pileupEnd: pileupEnd = rend
 			qSeqAln = aln.query_alignment_sequence
 			qSeqUnaln = aln.query_sequence
 			#alignment location
@@ -133,13 +135,13 @@ for region in R:
 			
 			#mismatches and indels
 			#How to encode for feature vector? Need entries from first pileupcolumn.pos to last pileupcolumn.pos
-			alignmentStarts.append(qstart)
-			refSeq = reference.fetch(reference=chrom,start=aln.reference_start,end=aln.reference_end).upper()
+			alignmentStarts.append(rstart)
+			refSeq = reference.fetch(reference=chrom,start=rstart,end=rend).upper()
 			refIdx = 0
 			thisReadAln = [] #corresponds to positions in reference
 			P = aln.get_aligned_pairs()
 			for (q,r) in P: #position in query, position in reference
-				if q >= len(qSeqUnaln) or refIdx >= len(refSeq): break #should refIdx get too long?
+				if (q is not None and q >= len(qSeqUnaln)) or refIdx >= len(refSeq): break #should refIdx get too long?
 				if r == start: #don't include the site of interest - see if they cluster otherwise.
 					if q == None or qSeqUnaln[q] != refSeq[refIdx]: basesAtSite.append(1)
 					else: basesAtSite.append(0)
@@ -162,37 +164,122 @@ for region in R:
 			alignments.append(thisReadAln)
 
 	#pad all vectors with 0s to align the columns wrt reference
+	totalLen = pileupEnd - pileupStart + 2
+	depthAlt = [0 for _ in range(totalLen)]
+	depthRef = [0 for _ in range(totalLen)]
+	sumRef = [0 for i in range(totalLen)]
+	sumAlt = [0 for i in range(totalLen)]
+
+	#otherFeats = [x[:] for x in readsAtSite]
 	for (i,seq) in enumerate(alignments):
 		L = len(seq)
-		readsAtSite[i] = readsAtSite[i] + [0 for _ in range(alignmentStarts[i] - pileupStart)] + seq + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )]
-		#readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + seq + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )]
+		#readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + seq + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )] + readsAtSite[i]
+		readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + [1] + seq + [1] + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )] #the 1's surrounding seq indicate the read ends - hopefully columns are still in line.
+		if basesAtSite[i] == 0:
+			for j in range(-1,L+1): 
+				depthRef[j + alignmentStarts[i] - pileupStart + 1] += 1
+			for j in range(totalLen):
+				sumRef[j] += readsAtSite[i][j]
+		else:
+			for j in range(-1,L+1): 
+				depthAlt[j + alignmentStarts[i] - pileupStart + 1] += 1
+			for j in range(totalLen):
+				sumAlt[j] += readsAtSite[i][j]
+		'''
+		if basesAtSite[i] == 0:
+			for j in range(L): 
+				depthRef[j + alignmentStarts[i] - pileupStart + 1] += 1
+			for j in range(totalLen):
+				sumRef[j] += readsAtSite[i][j]
+		else:
+			for j in range(L): 
+				depthAlt[j + alignmentStarts[i] - pileupStart + 1] += 1
+			for j in range(totalLen):
+				sumAlt[j] += readsAtSite[i][j]
+		'''
 	#for k in readsAtSite:
-		#print("".join([str(i) for i in k]))
+	#	print("".join([str(i) for i in k]))
+	#print(pileupStart,pileupEnd,pileupEnd-pileupStart,totalLen,len(readsAtSite),sum(basesAtSite))
 	
-	print( len(basesAtSite),len(readsAtSite))
-	clusterRef = [readsAtSite[i] for i in range(len(readsAtSite)) if basesAtSite[i] == 0]
-	clusterAlt = [readsAtSite[i] for i in range(len(readsAtSite)) if basesAtSite[i] == 1]
-
-	avgRef = [0 for _ in range(len(readsAtSite[0]))]
-	for i in range(len(avgRef)):
-		for k in clusterRef:
-			avgRef[i] += k[i]
-		avgRef[i] = 1.0*avgRef[i]/len(clusterRef)
-
-	avgAlt = [0 for _ in range(len(readsAtSite[0]))]
-	for i in range(len(avgAlt)):
-		for k in clusterAlt:
-			avgAlt[i] += k[i]
-		avgAlt[i] = 1.0*avgAlt[i]/len(clusterAlt)
-
-	print(zip(avgRef,avgAlt))
 	'''
-	k = KMeans(n_clusters=2).fit_predict(readsAtSite)
+	consensusDiff = []
+	#positions = []
+	for i in range(totalLen):
+		if sumRef[i] != sumAlt[i]:
+			d = abs(sumRef[i] - sumAlt[i])
+			consensusDiff.append(min(depthAlt[i]+depthRef[i]-d,d))
+			#positions.append(i+pileupStart)
+	#print(zip(positions,consensusDiff))
+	print(consensusDiff)
+	'''
+	'''
+	r = random.shuffle(readsAtSite)
+	sumRand1 = [0 for i in range(totalLen)]
+	sumRand2 = [0 for i in range(totalLen)]
+	for i in range(sum(basesAtSite)):
+		for j in range(len(sumRand1)): sumRand1[j] += readsAtSite[i][j]
+	for i in range(sum(basesAtSite),len(readsAtSite)):
+		for j in range(len(sumRand2)): sumRand2[j] += readsAtSite[i][j]
+	
+	randDiff = []
+	#positions = []
+	for i in range(totalLen):
+		if sumRand1[i] != sumRand2[i]:
+			d = abs(sumRand1[i] - sumRand2[i])
+			randDiff.append(min(depthAlt[i]+depthRef[i]-d,d))
+			#positions.append(i+pileupStart)
+	#print(zip(positions,consensusDiff))
+	print(randDiff)
+	'''
+
+	
+	#clusterRef = [readsAtSite[i] + otherFeats[i] for i in range(len(readsAtSite)) if basesAtSite[i] == 0]
+	#clusterAlt = [readsAtSite[i] + otherFeats[i] for i in range(len(readsAtSite)) if basesAtSite[i] == 1]
+	#totalLen = len(clusterRef[0])
+	avgRef = [1.0*sumRef[i]/depthRef[i] if depthRef[i] > 0 else 0 for i in range(totalLen)]
+	avgAlt = [1.0*sumAlt[i]/depthAlt[i] if depthAlt[i] > 0 else 0 for i in range(totalLen)]
+	avgDiff = [str(abs(avgAlt[i] - avgRef[i])) for i in range(totalLen)]
+	#print(chrom + "\t" + str(start) + "\t" + "\t".join(avgDiff))
+	#print(chrom + "\t" + str(start) + "\t" + "\t".join([str(x) for x in sumAlt]) + "\t" + "\t".join([str(x) for x in sumRef]))
+	print(chrom + "\t" + str(start) + "\t" + "\t".join([str(1.0*sumAlt[i]/(sumAlt[i]+sumRef[i])) if (sumRef[i]+sumAlt[i]) > 0 else "0" for i in range(totalLen)]) + "\t" + "\t".join([str(1.0*sumRef[i]/(sumAlt[i]+sumRef[i])) if (sumRef[i]+sumAlt[i]) > 0 else "0" for i in range(totalLen)]))
+	#,1.0*sumRef[i]/(sumRef[i]+sumAlt[i]))
+	#print(zip(sumRef,sumAlt))
+	
+	'''
+	r = random.shuffle(readsAtSite)
+	depthAlt = [0 for _ in range(totalLen)]
+	depthRef = [0 for _ in range(totalLen)]
+	for (i,seq) in enumerate(readsAtSite[:sum(basesAtSite)]):
+		aln_start = readsAtSite[i].index(1)
+		for j in range(L): 
+			depthAlt[j + aln_start + 1] += 1
+			sumAlt[j] += readsAtSite[i][j]
+
+	for (i,seq) in enumerate(alignments[sum(basesAtSite):]):
+		L = len(seq)
+		readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + [1] + seq + [1] + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )]
+		aln_start = readsAtSite[i].index(1)
+		for j in range(L): 
+			depthRef[j + aln_start + 1] += 1
+			sumRef[j] += readsAtSite[i][j]
+
+	avgRef = [1.0*sumRef[i]/depthRef[i] if depthRef[i] > 0 else 0 for i in range(totalLen)]
+	avgAlt = [1.0*sumAlt[i]/depthAlt[i] if depthAlt[i] > 0 else 0 for i in range(totalLen)]
+	avgDiff = [abs(avgAlt[i] - avgRef[i]) for i in range(totalLen)]		
+	print(avgDiff)
+	'''
+
+	'''
+	k = KMeans(n_clusters=4).fit_predict(readsAtSite)
 	for (i,n) in enumerate(k):
-		print(n,readNames[i])
+		if basesAtSite[i] == 0:
+			print(n,readNames[i])
 	print()
+	for (i,n) in enumerate(k):
+		if basesAtSite[i] == 1:
+			print(n,readNames[i])
+	print()
+	#sys.exit()
 	'''
-	sys.exit()
-
 
 

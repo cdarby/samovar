@@ -11,7 +11,7 @@ else:
 	import cPickle
 
 
-def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, XT, ASXS):
+def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, ASXS, pair):
 
 	nh0 = sum([k == 0 for k in XH])
 	nh1 = sum([k == 1 for k in XH])
@@ -81,8 +81,9 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Cavgind = 1.0*np.compress(mask,ind).sum()/nC
 	Cfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,clip)]) / nC
 	Cfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,ind)]) / nC
-	CfracXT = 1.0*np.compress(mask,XT).sum()/nC
+	#CfracXT = 1.0*np.compress(mask,XT).sum()/nC
 	CavgASXS = 1.0*np.compress(mask,ASXS).sum()/nC
+	Cavgpair = 1.0*np.compress(mask,pair).sum()/nC
 
 	mask_inv = [False if (mask[i] or XH[i] == None or (bases[i] != major and bases[i] != minor)) else True for i in range(depth) ]
 	nN = sum(mask_inv)
@@ -110,8 +111,9 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Navgind = 1.0*np.compress(mask,ind).sum()/nN
 	Nfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,clip)]) / nN
 	Nfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask,ind)]) / nN
-	NfracXT = 1.0*np.compress(mask_inv,XT).sum()/nN
+	#NfracXT = 1.0*np.compress(mask_inv,XT).sum()/nN
 	NavgASXS = 1.0*np.compress(mask_inv,ASXS).sum()/nN
+	Navgpair = 1.0*np.compress(mask_inv,pair).sum()/nN
 
 	fracC = 1.0*nC/(nN+nC)
 	weightedCbq = 1.0*nC*Cavgbq/(nC*Cavgbq+nN*Navgbq)
@@ -127,8 +129,9 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Mavgind = 1.0*np.compress(mask_M,ind).sum()/nminor
 	Mfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_M,clip)]) / nminor
 	Mfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_M,ind)]) / nminor
-	MfracXT = 1.0*np.compress(mask_M,XT).sum()/nminor
+	#MfracXT = 1.0*np.compress(mask_M,XT).sum()/nminor
 	MavgASXS = 1.0*np.compress(mask_M,ASXS).sum()/nminor
+	Mavgpair = 1.0*np.compress(mask_M,pair).sum()/nminor
 
 	mask_J = [True if bases[i] == major else False for i in range(depth)]
 	Javgbq = 1.0*np.compress(mask_J,bqs).sum()/nmajor
@@ -139,18 +142,19 @@ def siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, 
 	Javgind = 1.0*np.compress(mask_J,ind).sum()/nmajor
 	Jfracclip = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_J,clip)]) / nmajor
 	Jfracind = 1.0*sum([1 if i>0 else 0 for i in np.compress(mask_J,ind)]) / nmajor
-	JfracXT = 1.0*np.compress(mask_J,XT).sum()/nmajor
+	#JfracXT = 1.0*np.compress(mask_J,XT).sum()/nmajor
 	JavgASXS = 1.0*np.compress(mask_J,ASXS).sum()/nmajor
+	Javgpair = 1.0*np.compress(mask_J,pair).sum()/nmajor
 
 	weightedMbq = 1.0*np.compress(mask_M,bqs).sum()/(Mavgbq * nminor + Javgbq * nmajor)
 	Mavgibq = 1-weightedMbq #Should rm this feature - redundant. 
 	
 	features = [depth,fracphased,fracstrand,frach,MAF,MAF_phased,
-		nC,fracC,Cavgbq,Cfrach,Cavgmapq,Cfracstrand,CMAF,CavgXL,CavgXV,CavgXR,CavgXB,Cavgpos,Cavgclip,Cavgind,Cfracclip,Cfracind,CfracXT,CavgASXS,
-		Navgbq,Nfrach,Navgmapq,Nfracstrand,NMAF,NavgXL,NavgXV,NavgXR,NavgXB,Navgpos,Navgclip,Nfracclip,Nfracind,Navgind,NfracXT,NavgASXS,
+		nC,fracC,Cavgbq,Cfrach,Cavgmapq,Cfracstrand,CMAF,CavgXL,CavgXV,CavgXR,CavgXB,Cavgpos,Cavgclip,Cavgind,Cfracclip,Cfracind,CavgASXS,Cavgpair,
+		Navgbq,Nfrach,Navgmapq,Nfracstrand,NMAF,NavgXL,NavgXV,NavgXR,NavgXB,Navgpos,Navgclip,Nfracclip,Nfracind,Navgind,NavgASXS,Navgpair,
 		weightedCbq,Cavgibq,
-		Mavgbq,Mavgmapq,Mfracstrand,Mavgpos,Mavgclip,Mavgind,Mfracclip,Mfracind,Mavgibq,weightedMbq,MfracXT,MavgASXS,
-		Javgbq,Javgmapq,Jfracstrand,Javgpos,Javgclip,Javgind,Jfracclip,Jfracind,JfracXT,JavgASXS,MAFnorm,fracOtherAllele]
+		Mavgbq,Mavgmapq,Mfracstrand,Mavgpos,Mavgclip,Mavgind,Mfracclip,Mfracind,Mavgibq,weightedMbq,MavgASXS,Mavgpair,
+		Javgbq,Javgmapq,Jfracstrand,Javgpos,Javgclip,Javgind,Jfracclip,Jfracind,JavgASXS,Javgpair,MAFnorm,fracOtherAllele]
 
 	return features
 
@@ -170,27 +174,30 @@ parser = argparse.ArgumentParser(description='python siteFeatures.py --bam diplo
 parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--bed', help='Input bed file name (output from classifySite)',required=True)
 parser.add_argument('--nproc',help="parallelism",required=False,default=3)
-parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
+parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=False,default=None)
 
 #parser.add_argument('--out', help='Output file name',required=True)
 args = parser.parse_args()
-
+nproc = int(args.nproc)
 
 R = readIntervalFile(args.bed)
 
-featureDict = cPickle.load(open(args.featuredict,'rb'))
-NROWS = max(featureDict.keys()) + 1
-featureArr = pymp.shared.array((NROWS,4),dtype='float32') #default float64
-for (k,v) in featureDict.items():
-	featureArr[k][0] = v[0]
-	featureArr[k][1] = v[1]
-	featureArr[k][2] = v[2]
-	featureArr[k][3] = v[3]
-featureDict = None #so that it's not copied by each parallel
+if args.featuredict is not None:
+	featureDict = cPickle.load(open(args.featuredict,'rb'))
+	NROWS = max(featureDict.keys()) + 1
+	featureArr = pymp.shared.array((NROWS,4),dtype='float32') #default float64
+	for (k,v) in featureDict.items():
+		featureArr[k][0] = v[0]
+		featureArr[k][1] = v[1]
+		featureArr[k][2] = v[2]
+		featureArr[k][3] = v[3]
+	featureDict = None #so that it's not copied by each parallel
+else:
+	featureArr = None
 
 #outfile = open(args.out + args.bed +".filteringfeatures", "w")
 
-with pymp.Parallel(int(args.nproc)) as pymp_context:
+with pymp.Parallel(nproc,if_=(nproc > 1)) as pymp_context:
 	samfile = pysam.AlignmentFile(args.bam, "rb")
 	for region_index in pymp_context.xrange(len(R)): #pymp.xrange returns an iterator and corresponds to dynamic scheduling.
 		#pymp_context.print(pymp_context.thread_num)
@@ -221,8 +228,9 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 			XV = []
 			XR = []
 			XB = []
-			XT = []
+			#XT = []
 			ASXS = []
+			pair = []
 
 			depth = 0
 			for pileupread in pileupcolumn.pileups:
@@ -241,6 +249,9 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 
 				if aln.is_reverse: strands.append(0)
 				else: strands.append(1)
+
+				if aln.is_proper_pair: pair.append(0)
+				else: pair.append(1)
 				
 				n_ind = 0
 				for (op,ln) in aln.cigartuples:
@@ -248,7 +259,7 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 						n_ind += ln
 				ind.append(n_ind)
 				
-				XT.append(aln.get_tag("XT"))
+				#XT.append(aln.get_tag("XT"))
 				ASXS.append(aln.get_tag("AS") - aln.get_tag("XS"))
 				
 				# linked read-quality features
@@ -256,7 +267,7 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 					XH.append(aln.get_tag("HP")-1)
 				else: 
 					XH.append(None)
-				if aln.has_tag("MI"): 
+				if featureArr is not None and aln.has_tag("MI"): 
 					MI = aln.get_tag("MI")
 					try:
 						M = featureArr[MI] 
@@ -284,6 +295,6 @@ with pymp.Parallel(int(args.nproc)) as pymp_context:
 			if depth <= 0: 
 				continue
 
-			featurevector = siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, XT, ASXS)
+			featurevector = siteFeatures(depth, bases, bqs, mapqs, strands, readpos, clip, ind, XH, XL, XV, XR, XB, ASXS, pair)
 			if featurevector is not None:
 				pymp_context.print(chrom + "\t" + str(start) + "\t" + clfscore + "\t" + "\t".join([str(x) for x in featurevector]))

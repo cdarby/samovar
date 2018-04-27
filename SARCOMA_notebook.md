@@ -4,21 +4,225 @@
 
 Samples 0, 10, 1, 2, 3, 6, 9, C1
 
+Sort bam file by name first, otherwise not compatible with bamtofastq
+
+```
+~/scratch/bamtofastq --gemcode /scratch/groups/mschatz1/mschatz/sidow/sarcoma/10XSARCOMA0.bam fastqs
+~/scratch/longranger-1.3.1/longranger run --sex=m --id=SARCOMA0 --fastqs=fastqs --fastqprefix=bamtofastq --nopreflight --jobmode=slurm --reference=/work-zfs/mschatz1/resources/refdata-GRCh38-2.1.0/
+samtools view phased_possorted_bam.bam | grep -c "HP"
+```
+
 `10XSARCOMA0.bam`
+
+```
+891330438 + 0 in total (QC-passed reads + QC-failed reads)
+14215374 + 0 secondary
+0 + 0 supplementary
+6377971 + 0 duplicates
+865356029 + 0 mapped (97.09% : N/A)
+877115064 + 0 paired in sequencing
+438557532 + 0 read1
+438557532 + 0 read2
+787332988 + 0 properly paired (89.76% : N/A)
+846449050 + 0 with itself and mate mapped
+4691605 + 0 singletons (0.53% : N/A)
+38012988 + 0 with mate mapped to a different chr
+30309591 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+371270109/865356029 42.9% reads phased
 
 `10XSARCOMA10.bam`
 
+```
+867495683 + 0 in total (QC-passed reads + QC-failed reads)
+13424189 + 0 secondary
+0 + 0 supplementary
+8080161 + 0 duplicates
+842939239 + 0 mapped (97.17% : N/A)
+854071494 + 0 paired in sequencing
+427035747 + 0 read1
+427035747 + 0 read2
+767801556 + 0 properly paired (89.90% : N/A)
+824154180 + 0 with itself and mate mapped
+5360870 + 0 singletons (0.63% : N/A)
+32816500 + 0 with mate mapped to a different chr
+26547530 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+501127641/842939239 = 59.5% reads phased
+
 `10XSARCOMA1.bam`
+
+```
+877219894 + 0 in total (QC-passed reads + QC-failed reads)
+12682666 + 0 secondary
+0 + 0 supplementary
+8444013 + 0 duplicates
+852953731 + 0 mapped (97.23% : N/A)
+864537228 + 0 paired in sequencing
+432268614 + 0 read1
+432268614 + 0 read2
+783360690 + 0 properly paired (90.61% : N/A)
+836100798 + 0 with itself and mate mapped
+4170267 + 0 singletons (0.48% : N/A)
+29104260 + 0 with mate mapped to a different chr
+22802571 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+480053123/852953731 = 56.3% reads phased
 
 `10XSARCOMA2.bam`
 
+```
+879931172 + 0 in total (QC-passed reads + QC-failed reads)
+13529062 + 0 secondary
+0 + 0 supplementary
+7137760 + 0 duplicates
+857219366 + 0 mapped (97.42% : N/A)
+866402110 + 0 paired in sequencing
+433201055 + 0 read1
+433201055 + 0 read2
+781684690 + 0 properly paired (90.22% : N/A)
+839350980 + 0 with itself and mate mapped
+4339324 + 0 singletons (0.50% : N/A)
+33636470 + 0 with mate mapped to a different chr
+26361711 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+448121593/857219366 = 52.3% reads phased
+
 `10XSARCOMA3.bam`
+
+```
+866768894 + 0 in total (QC-passed reads + QC-failed reads)
+12635812 + 0 secondary
+0 + 0 supplementary
+7643573 + 0 duplicates
+843169690 + 0 mapped (97.28% : N/A)
+854133082 + 0 paired in sequencing
+427066541 + 0 read1
+427066541 + 0 read2
+771637304 + 0 properly paired (90.34% : N/A)
+825618120 + 0 with itself and mate mapped
+4915758 + 0 singletons (0.58% : N/A)
+29739826 + 0 with mate mapped to a different chr
+22309349 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+414229584/843169690 = 49.1% reads phased
 
 `10XSARCOMA6.bam`
 
+```
+873456428 + 0 in total (QC-passed reads + QC-failed reads)
+12989166 + 0 secondary
+0 + 0 supplementary
+7873398 + 0 duplicates
+850013840 + 0 mapped (97.32% : N/A)
+860467262 + 0 paired in sequencing
+430233631 + 0 read1
+430233631 + 0 read2
+780514540 + 0 properly paired (90.71% : N/A)
+832742342 + 0 with itself and mate mapped
+4282332 + 0 singletons (0.50% : N/A)
+29466838 + 0 with mate mapped to a different chr
+22671785 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+438575936/850013840 = 51.6% reads phased
+
 `10XSARCOMA9.bam`
 
+```
+887581382 + 0 in total (QC-passed reads + QC-failed reads)
+13497006 + 0 secondary
+0 + 0 supplementary
+6707799 + 0 duplicates
+862999268 + 0 mapped (97.23% : N/A)
+874084376 + 0 paired in sequencing
+437042188 + 0 read1
+437042188 + 0 read2
+788651686 + 0 properly paired (90.23% : N/A)
+844806626 + 0 with itself and mate mapped
+4695636 + 0 singletons (0.54% : N/A)
+33349752 + 0 with mate mapped to a different chr
+25558301 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+393211473/862999268 = 45.6% reads phased
+
 `10XSARCOMAC1.bam`
+
+```
+853518499 + 0 in total (QC-passed reads + QC-failed reads)
+12142641 + 0 secondary
+0 + 0 supplementary
+7138794 + 0 duplicates
+827130048 + 0 mapped (96.91% : N/A)
+841375858 + 0 paired in sequencing
+420687929 + 0 read1
+420687929 + 0 read2
+762771160 + 0 properly paired (90.66% : N/A)
+809533986 + 0 with itself and mate mapped
+5453421 + 0 singletons (0.65% : N/A)
+26834738 + 0 with mate mapped to a different chr
+19396304 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+373956625/827130048 = 45.2% reads phased
+
+
+**Subsample for Ginkgo CNV clustering analysis**  
+
+`samtools view -q 20 -s 0.04 -b 6/SARCOMA6/outs/phased_possorted.bam | bedtools bamtobed -i stdin | cut -f 1-3`
+
+[Ginkgo results](http://qb.cshl.edu/ginkgo?q=results/4bsmN6FxrQtk700znu0s)
+
+**CNVnator**
+
+```
+cnvnator -root ${NUM}/out.root -tree ${NUM}/SARCOMA${NUM}/outs/phased_possorted_bam.bam
+cnvnator -root ${NUM}/out.root -his 100 -d /work-zfs/mschatz1/resources/grch38/
+cnvnator -root ${NUM}/out.root -stat 100
+cnvnator -root ${NUM}/out.root -partition 100
+cnvnator -root ${NUM}/out.root -call 100 > ${NUM}/cnvnator.tsv'
+python /work-zfs/mschatz1/cdarby/HCC1954T/pipeline/0.setup/cnvnator2bed.py ${NUM}/cnvnator.tsv ${NUM}/cnvnator.bed /work-zfs/mschatz1/resources/refdata-GRCh38-2.1.0/fasta/genome.fa.fai ; done
+```
+Base pairs affected by CNVnator +5bp buffer
+```
+0
+2005470598
+1
+1881236238
+10
+1864930808
+2
+1881274616
+3
+1727553649
+6
+1692908916
+9
+1801646122
+C1
+1370152982
+```
+
+**Insert size of mate pair library**  
+Control: mean 6766; median 6606
+
+##MosaicHunter
+
+Single: 7 10X libraries / 3 Mate Pair / 7 Illumina (17 possibilities)
+Paired: There is separate control of Mate Pair, 10X, and Illumina (17 possibilities, assuming each datatype is paired with its own control)
+
+
+##HapMuc
+
+Paired: 17 possibilities, assuming each datatype is paired with its own control
+
+
 
 ##OTHER
 
@@ -254,9 +458,4 @@ Samples 0, 10, 1, 2, 3, 6, 9, C1
 20575 + 0 singletons (0.21% : N/A)
 67238 + 0 with mate mapped to a different chr
 33872 + 0 with mate mapped to a different chr (mapQ>=5)
-```
-
-```
-~/scratch/bamtofastq --gemcode /scratch/groups/mschatz1/mschatz/sidow/sarcoma/10XSARCOMA0.bam fastqs
-~/scratch/longranger-1.3.1/longranger run --sex=m --id=SARCOMA0 --fastqs=fastqs --fastqprefix=bamtofastq --nopreflight --jobmode=slurm --reference=/work-zfs/mschatz1/resources/refdata-GRCh38-2.1.0/
 ```

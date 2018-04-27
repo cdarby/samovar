@@ -31,9 +31,9 @@ parser.add_argument('--maxleafnodes', help='Maximum leaf nodes per tree in RFC' 
 
 args = parser.parse_args()
 
-DPTH=args.mindepth
-NEST=args.nestimators
-MXNODES=args.maxleafnodes
+DPTH=int(args.mindepth)
+NEST=int(args.nestimators)
+MXNODES=int(args.maxleafnodes)
 
 #0th item in feature vect is depth.
 mosaicsites = [line.strip().split() for line in open(args.mosaic, 'r') if float(line.strip().split()[0]) > DPTH]

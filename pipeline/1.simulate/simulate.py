@@ -60,7 +60,7 @@ def readFeatures(read):
     for (op,ln) in read.cigartuples:
         if op == 1 or op == 2 or op == 3:
             ind += ln
-    ASXS = read.get_tag("AS") - read.get_tag("XS")
+    ASXS = int(read.get_tag("AS")) - int(read.get_tag("XS")) #having some issues with gemcode tag dtype
     if read.has_tag("HP"):
         XH = read.get_tag("HP")-1
     else:

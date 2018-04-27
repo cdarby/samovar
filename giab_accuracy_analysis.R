@@ -6,6 +6,15 @@ colnamesPaired <- c("status","id","pairedscore","chrom","pos","unpairedscore","d
                     #"Navgbq","Nfrach","Navgmapq","Nfracstrand","NMAF","NavgXL","NavgXV","NavgXR","NavgXB","Navgpos","Navgclip","Nfracclip","Nfracind","Navgind","NavgASXS","Navgpair","weightedCbq")
 pairedend <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/giab/pairedend/paired.features_labeled.tsv",sep="\t",header=F,col.names=colnamesPaired)
 
+P <- pairedend[pairedend$unpairedscore >= 0.9,]
+P$score <- P$unpairedscore
+P <- P[order(P$score,decreasing=T),]
+filteredP <- P[P$depth >= 16 & P$MAF > 0.05,]
+
+P <- pairedend[pairedend$pairedscore >= 0.9,]
+filteredP <- P[P$depth >= 16 & P$MAF > 0.05,]
+
+
 pairedend$score <- pairedend$unpairedscore
 K <- colorRampPalette(c("red","purple","cyan"))
 m <- K(10)
@@ -117,4 +126,26 @@ for (i in S[2:10]) {
 B <- seq(min(filteredB$score),max(filteredB$score),length.out = 100)
 lines(getaxis(filteredB[filteredB$score > 0,],B,xaxisfunction),getaxis(filteredB[filteredB$score > 0,],B,yaxisfunction),type="l")
 legend("bottomright",legend=S,col=m,lty=rep(1,10)) 
+
+###################
+
+rank <- seq(1,length(P$status))
+S <- seq(0,0.45,by=0.05)
+P <- P[order(P$score,decreasing=T),]
+sum(P$status[1:1000])
+
+sapply(S,function(i) length(P$status[P$MAF >= i & P$MAF < i+0.05]))
+sapply(S,function(i) sum(P$status[P$MAF >= i & P$MAF < i+0.05]))
+
+sapply(S,function(i) sum(P$status[P$MAF >= i & P$MAF < i+0.05][1:100]))
+sapply(S,function(i) length(P$MAF[1:10][P$MAF[1:10] >= i & P$MAF[1:10] < i+0.05]))
+sapply(S,function(i) mean(P$score[P$MAF >= i & P$MAF < i+0.05][1:10]))
+sapply(S,function(i) min(rank[P$MAF >= i & P$MAF < i+0.05][1:10]))
+
+
+#########
+
+giabE <- read.delim("~/Documents/lab/samovar/testdata_DO_NOT_COMMIT/giab/editedsitestrain/scan_norepeat_labeled.features.tsv",sep="\t",header=F,col.names=colnames)
+
+
 

@@ -2,8 +2,15 @@
 
 ## 0. General
 
+(10X)
 Carriers: 23, 28, 35, 43R, 50, 55, 63, 65  
-Controls: 103, 110, 16, 30, 33, 49, 51, 54, 57, 60, 70
+Controls: 16, 30, 33, 49, 51, 54, 57, 60, 70, 103, 106, 110
+ 
+(Illumina)
+Carriers: 7, 18, 21, 22, 35, 43L/R, 50, 52, 55, 63, 65, 69, 102
+
+Responders: 16, 33, 70, 103, 106, 110  
+Non-Responders: 30, 49, 51, 54, 57, 60
 
 `T103_longranger/phased_possorted_bam.bam`
 
@@ -877,13 +884,67 @@ T54_longranger/phased_possorted_bam.bam
 4164353 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
 
-Subsample for Ginkgo analysis  
+**Subsample for Ginkgo CNV clustering analysis**  
 
 ```
 samtools view -q 20 -s 0.04 -b T${NUM}_longranger/phased_possorted_bam.bam | bedtools bamtobed -i stdin > T${NUM}.bed; done
 ```
 
-[Results](http://qb.cshl.edu/ginkgo/?q=results/VPDTv5sfpiEvT9RJ0bRJ)
+[Ginkgo results](http://qb.cshl.edu/ginkgo/?q=results/VPDTv5sfpiEvT9RJ0bRJ)
+
+**CNVnator**
+
+```
+cnvnator -root T${NUM}_longranger/out.root -tree T${NUM}_longranger/phased_possorted_bam.bam 
+cnvnator -root T${NUM}_longranger/out.root -his 100 -d /work-zfs/mschatz1/resources/grch38/
+cnvnator -root T${NUM}_longranger/out.root -stat 100
+cnvnator -root T${NUM}_longranger/out.root -partition 100
+cnvnator -root T${NUM}_longranger/out.root -call 100 > T${NUM}_longranger/cnvnator.tsv'
+```
+
+Base pairs affected by cnvnator +5bp buffer
+```
+103
+821081155
+106
+449644488
+110
+1279156262
+16
+425740413
+23
+501690372
+28
+572813326
+30
+903679837
+33
+821044269
+35
+373917211
+43R
+1276597117
+49
+816192070
+50
+885429250
+51
+1028786189
+54
+468488551
+55
+392017013
+57
+1058318633
+60
+1081253604
+63
+459658809
+65
+1146712512
+70
+589217438
+```
 
 ## 1. Train
 
@@ -1001,4 +1062,34 @@ cat scanNB_norepeat.features.tsv | awk '{print "0\t" $0}' >> scanNB_norepeat_lab
 sort -u -k2 -o scanNB_norepeat_labeled.features.tsv scanNB_norepeat_labeled.features.tsv
 ```
 
-Evaluate filters individually (top 1000?)
+##3. MosaicHunter 
+
+
+Single: (20) 10X; (14) Illumina
+Paired: (5) 10X Tumor / Illumina blood; (14) Illumina Tumor / Illumina blood
+43R, 50, 55, 63, 65 have both Illumina T/B + 10X T
+
+##4. HapMuc
+
+Paired: (8) 10X Tumor / Illumina blood; (2) Illumina Tumor / Illumina blood
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

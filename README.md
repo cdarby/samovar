@@ -2,8 +2,8 @@
 Somatic (mosaic) SNV caller for 10X Genomics data using random forest classification and feature-based filters
 
 Requires: Python 2 or 3 with [pymp](https://github.com/classner/pymp) (`pip install pymp-pypi`); [scikit-learn](http://scikit-learn.org/); [pysam](http://pysam.readthedocs.io/en/latest/index.html)  
-SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N
-ß
+SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N  
+
 #Main Pipeline
 
 ### 0.setup/generateVarfile.py
@@ -114,7 +114,7 @@ python ../2.train/train.py --mosaic outs/mosaic.features.tsv --het outs/het.feat
 python ../3.classify/classifyAndFilter.py --bam example.bam --bed window.bed --clf outs/clf.pkl
 python ../4.filter/linkageFilter.py --bam example.bam --bed example_scan.tsv --ref /work-zfs/mschatz1/resources/refdata-GRCh38-2.1.0/fasta/genome.fa --vcfavoid example.vcf
 ```
-
+  
 #Experiments
 
 

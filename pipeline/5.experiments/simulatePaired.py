@@ -202,19 +202,20 @@ def siteFeatures(S,vaf,simMode):
 
 
 
-parser = argparse.ArgumentParser(description='python simulateSitesFromDict.py')
+parser = argparse.ArgumentParser(description='python simulatePaired.py --bam sample.bam --varfile out.varfile --simulate --nproc 8 --subsample 0.5 > mosaic.features.tsv')
 parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--varfile', help='Input varfile name (.varfile if --simulate True, otherwise .vcf)',required=True)
-#parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
 parser.add_argument('--simulate', help='Specify iff simulation mode',action='store_true')
 parser.add_argument('--max', help='Maximum sites to (successfully) simulate',required=False,default=None)
 parser.add_argument('--nproc',help="parallelism",required=False,default=3)
+parser.add_argument('--subsample', help='fraction of depth to retain' ,required=True)
 
 args = parser.parse_args()
 nproc = int(args.nproc)
 Site = namedtuple('Site','pos bases bqs readpos clip ind XH')
 simMode = args.simulate
 maxdata = int(1.0*int(args.max)/nproc) if args.max is not None else None #divide equally instead of "shared counter" construct 
+subsample = float(args.subsample)
 
 N = 0
 R = readIntervalFile(args.varfile,simMode)
@@ -233,6 +234,7 @@ with pymp.Parallel(nproc,if_=(nproc > 1)) as pymp_context:
                     break
                 S = Site(refpos,[],[],[],[],[],[])
                 for pileupread in pileupcolumn.pileups:
+                    if random.random() > subsample: continue
                     read = pileupread.alignment
                     if read.is_duplicate or read.is_qcfail or read.is_secondary or read.is_supplementary: continue #aln.is_unmapped or 
                     querypos = pileupread.query_position

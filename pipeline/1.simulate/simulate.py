@@ -4,15 +4,6 @@
 #Python 2.7.13 (tested 01-24-18)
 #Python 3.6.2 (tested 01-24-18)
 
-'''
-could remove next round of pruning:
-depth
-"pos" features
-"frach" features
-J features
-N features (x/ MAF)
-'''
-
 from __future__ import print_function
 
 import pysam,argparse,os,sys,random,pymp
@@ -219,10 +210,9 @@ def siteFeatures(S,vaf,simMode):
 
 
 
-parser = argparse.ArgumentParser(description='python simulateSitesFromDict.py')
+parser = argparse.ArgumentParser(description='python simulate.py --bam sample.bam --varfile out.varfile --simulate --nproc 8')
 parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--varfile', help='Input varfile name (.varfile if --simulate True, otherwise .vcf)',required=True)
-#parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
 parser.add_argument('--simulate', help='Specify iff simulation mode',action='store_true')
 parser.add_argument('--het', help='Specify iff vcf is given and want het sites',action='store_true')
 parser.add_argument('--hom', help='Specify iff vcf is given and want hom sites',action='store_true')

@@ -6,10 +6,10 @@
 import pysam
 import argparse, sys
 
-parser = argparse.ArgumentParser(description='python mosaicTagBam.py')
+parser = argparse.ArgumentParser(description='python pairedTagBam.py --bam sample.bam --out paired.bam --vcf sample.vcf')
 parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--out', help='Output bam file name',required=True)
-parser.add_argument('--vcf', help='Input vcf file name (a .vcf file from longranger)',required=True)
+parser.add_argument('--vcf', help='Input vcf file name (a .vcf file from the sample)',required=True)
 
 args = parser.parse_args()
 

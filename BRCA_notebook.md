@@ -1062,16 +1062,37 @@ cat scanNB_norepeat.features.tsv | awk '{print "0\t" $0}' >> scanNB_norepeat_lab
 sort -u -k2 -o scanNB_norepeat_labeled.features.tsv scanNB_norepeat_labeled.features.tsv
 ```
 
+```
+    1294 T103_longranger/calls1.tsv
+     755 T106_longranger/calls1.tsv
+    1060 T110_longranger/calls1.tsv
+     231 T16_longranger/calls1.tsv
+     654 T23_longranger/calls1.tsv
+    1003 T28_longranger/calls1.tsv
+    1305 T30_longranger/calls1.tsv
+     640 T33_longranger/calls1.tsv
+     499 T35_longranger/calls1.tsv
+     474 T43R_longranger/calls1.tsv
+     267 T49_longranger/calls1.tsv
+    1784 T50_longranger/calls1.tsv
+    1319 T51_longranger/calls1.tsv
+     367 T54_longranger/calls1.tsv
+     931 T55_longranger/calls1.tsv
+     929 T57_longranger/calls1.tsv
+     452 T60_longranger/calls1.tsv
+     744 T63_longranger/calls1.tsv
+     982 T65_longranger/calls1.tsv
+     465 T70_longranger/calls1.tsv
+```
+
 ##3. MosaicHunter 
 
 
 Single: (20) 10X; (14) Illumina
-Paired: (5) 10X Tumor / Illumina blood; (14) Illumina Tumor / Illumina blood
-43R, 50, 55, 63, 65 have both Illumina T/B + 10X T
+Paired: (6) 10X Tumor / Illumina blood & tumor ; (14) Illumina Tumor / Illumina blood
+35, 43R, 50, 55, 63, 65 have both Illumina T/B + 10X T
 
 ##4. HapMuc
-
-Paired: (8) 10X Tumor / Illumina blood; (2) Illumina Tumor / Illumina blood
 
 
 

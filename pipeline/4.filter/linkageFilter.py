@@ -40,27 +40,15 @@ parser = argparse.ArgumentParser(description='python siteFeatures.py --bam diplo
 parser.add_argument('--bam', help='Input bam file name',required=True)
 parser.add_argument('--bed', help='Input bed file name (output from classifySite)',required=True)
 parser.add_argument('--ref',help="reference genome",required=True)
-parser.add_argument('--vcfavoid',help="VCF of variants to NOT use as linkage",required=True)
-
-#parser.add_argument('--featuredict', help='.pkl file from calcLinkedReadFeatures.py' ,required=True)
-
-#parser.add_argument('--out', help='Output file name',required=True)
+parser.add_argument('--vcfavoid',help="VCF of variants to NOT use as linkage",required=False,default=None)
 args = parser.parse_args()
 
-
 R = readIntervalFile(args.bed)
-V = readVCF(args.vcfavoid)
-'''
-featureDict = cPickle.load(open(args.featuredict,'rb'))
-NROWS = max(featureDict.keys()) + 1
-featureArr = pymp.shared.array((NROWS,4),dtype='float32') #default float64
-for (k,v) in featureDict.items():
-	featureArr[k][0] = v[0]
-	featureArr[k][1] = v[1]
-	featureArr[k][2] = v[2]
-	featureArr[k][3] = v[3]
-featureDict = None #so that it's not copied by each parallel
-'''
+if args.vcfavoid is not None:
+	V = readVCF(args.vcfavoid)
+else:
+	V = set()
+
 reference = pysam.FastaFile(args.ref)
 samfile = pysam.AlignmentFile(args.bam, "rb")
 #for region_index in pymp_context.xrange(len(R)): #pymp.xrange returns an iterator and corresponds to dynamic scheduling.
@@ -96,11 +84,12 @@ for region in R:
 			if pileupread.is_del and not pileupread.is_refskip:
 				continue     #should do something with indels at the site in question?
 			
-			
+			'''
 			if aln.has_tag("HP"): #Longranger read phasing tag
 				XH.append(aln.get_tag("HP")-1)
 			else: 
 				XH.append(None)
+			'''
 
 			readNames.append(aln.query_name)
 			qstart = aln.query_alignment_start	
@@ -111,14 +100,7 @@ for region in R:
 			if pileupEnd is None or rend > pileupEnd: pileupEnd = rend
 			qSeqAln = aln.query_alignment_sequence
 			qSeqUnaln = aln.query_sequence
-			#alignment location
-			
-			#thisReadFeatures.append(min((qend - pileupread.query_position_or_next),(pileupread.query_position_or_next - qstart))) #distance of base from end of aln
-			#thisReadFeatures.append(qend) #aln end
-			#thisReadFeatures.append(qstart) #aln start
-			#thisReadFeatures.append(len(qSeqUnaln) - len(qSeqAln)) # num soft-clip
-			#readsAtSite.append(thisReadFeatures)
-			
+
 			#mismatches and indels
 			#How to encode for feature vector? Need entries from first pileupcolumn.pos to last pileupcolumn.pos
 			alignmentStarts.append(rstart)
@@ -150,8 +132,10 @@ for region in R:
 					refIdx += 1
 			alignments.append(thisReadAln)
 
-
+	depth = len(readNames)
+	if depth <= 0: continue
 	#identify c-reads
+	'''
 	depth = len(XH)
 	if depth <= 0: continue
 	if len(XH) != len(basesAtSite):
@@ -169,6 +153,7 @@ for region in R:
 		mask = change_to_het_left_mask
 	else:   
 		mask = change_to_het_right_mask
+	'''
 
 	#pad all vectors with 0s to align the columns wrt reference
 	# "ref" and "alt" are c/non-c reads
@@ -182,16 +167,16 @@ for region in R:
 	for (i,seq) in enumerate(alignments):
 		L = len(seq)
 		readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + [1] + seq + [1] + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )] #the 1's surrounding seq indicate the read ends - hopefully columns are still in line.
-		if mask[i] == 0:
+		if basesAtSite[i] == 0: #if mask[i] == 0:
 			for j in range(-1,L+1): 
 				depthRef[j + alignmentStarts[i] - pileupStart + 1] += 1
 			for j in range(totalLen):
-				sumRef[j] += readsAtSite[i][j]
+				sumRef[j] += readsAtSite[i][j] #events on h0
 		else:
 			for j in range(-1,L+1): 
 				depthAlt[j + alignmentStarts[i] - pileupStart + 1] += 1
 			for j in range(totalLen):
-				sumAlt[j] += readsAtSite[i][j]
+				sumAlt[j] += readsAtSite[i][j] #events on h1
 
 	# should cache fisher pvals but will calc each time for now
 	min_pval = 1
@@ -205,6 +190,5 @@ for region in R:
 			min_table = T
 			min_pval = pvalue
 			min_start = pileupStart+k
+		sys.stderr.write(str(pileupStart+k) + "\t" + str(T) + "\t" + str(pvalue) + "\n" )
 	print("\t".join([str(x) for x in [chrom, min_start, min_pval, min_pval*totalLen, min_table] + region ]) )
-
-

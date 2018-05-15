@@ -20,7 +20,7 @@ FEATURENAMES = ["depth","fracphased","frach","MAF","MAF_phased",
         "Mavgind","MavgASXS","weightedMbq","Javgbq","Javgpos",
         "Javgclip","Javgind","JavgASXS"]
 
-parser = argparse.ArgumentParser(description='python train.py')
+parser = argparse.ArgumentParser(description='python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.features.tsv')
 parser.add_argument('--out', help='Output classifier name',required=False,default="clf.pkl")
 parser.add_argument('--mosaic', help='Feature file for mosaic sites',required=True)
 parser.add_argument('--het', help='Feature file for het sites' ,required=True)

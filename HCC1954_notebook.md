@@ -203,3 +203,27 @@ for NUM in `seq 1 22`; do /work-zfs/mschatz1/resources/hapmuc/bin/hapmuc -a /wor
 `awk '{print $1 "\t" $2-1 "\t" $2 "\t" $21}' < pairedMH.tsv > pairedMH.bed`
 ** 3745 calls **  
 ![](testdata_DO_NOT_COMMIT/HCCPair/MHunter/multi_MHunter_34.png)
+
+
+
+
+
+
+
+
+
+
+##MISC.
+
+Length of masked regions  
+
+Repeats (repeatasm): 878,411,944
+`cat ~/scratch/repeatasm/src/repeatsGRCh38.bed | awk '{SUM+=$3; SUM-=$2; print SUM}' | tail`
+
+MosaicHunter repeats: 1,613,387,205
+`cat ~/scratch/MosaicHunter/resources/all_repeats.hg38.bed | awk '{SUM+=$3; SUM-=$2; print SUM}' | tail`
+
+MosaicHunter error-prone: 13,7632
+`cat ~/scratch/MosaicHunter/resources/WGS.error_prone.hg38.bed | awk '{SUM+=$3; SUM-=$2; print SUM}' | tail`
+
+`cat ~/scratch/repeatasm/src/repeatsGRCh38.bed ~/scratch/MosaicHunter/resources/WGS.error_prone.hg38.bed ~/scratch/MosaicHunter/resources/all_repeats.hg38.bed | bedtools complement -i stdin -g ../../resources/refdata-GRCh38-2.1.0/fasta/genome.fa.fai > MERGE.bed`

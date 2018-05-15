@@ -12,10 +12,11 @@ from sklearn.externals import joblib
 import random,argparse
 from sklearn.metrics import confusion_matrix
 
-parser = argparse.ArgumentParser(description='python train.py')
+parser = argparse.ArgumentParser(description='python trainUnphased.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.features.tsv')
 parser.add_argument('--out', help='Output classifier name',required=False,default="clf.pkl")
 parser.add_argument('--mosaic', help='Feature file for mosaic sites',required=True)
-parser.add_argument('--germline', help='Feature file for germline sites' ,required=True)
+parser.add_argument('--het', help='Feature file for het sites' ,required=True)
+parser.add_argument('--hom', help='Feature file for hom sites' ,required=True)
 parser.add_argument('--mindepth', help='Minimum depth to use as training example' ,required=False,default=16)
 parser.add_argument('--nestimators', help='Number of estimators in RFC' ,required=False,default=100)
 parser.add_argument('--maxleafnodes', help='Maximum leaf nodes per tree in RFC' ,required=False,default=50)
@@ -30,7 +31,7 @@ MXNODES=args.maxleafnodes
 mosaicsites = [line.strip().split() for line in open(args.mosaic, 'r') if float(line.strip().split()[0]) > DPTH]
 
 mosaicsites = [ [line[0]] + [line[3]] + line[22:26] + line[27:32] for line in mosaicsites] #Remove all features regarding phasing
-germlinesites = [line.strip().split() for line in open(args.germline, 'r') if float(line.strip().split()[0]) > DPTH]
+germlinesites = [line.strip().split() for line in open(args.het, 'r') if float(line.strip().split()[0]) > DPTH] + [line.strip().split() for line in open(args.hom, 'r') if float(line.strip().split()[0]) > DPTH]
 germlinesites = [ [line[0]] + [line[3]] + line[22:26] + line[27:32] for line in germlinesites] #Remove all features regarding phasing
 
 
@@ -47,7 +48,5 @@ clf = clf.fit(X,Y)
 print("Confusion Matrix (class 0=Germline, class 1=Mosaic)")
 #cols are predicted, rows are actual
 print(confusion_matrix(Y,clf.predict(X)))
-
-#print zip(clf.feature_importances_,descriptions0)		
 joblib.dump(clf, args.out) 
 

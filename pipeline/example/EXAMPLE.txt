@@ -1,0 +1,11 @@
+reads from Genome in a Bottle NA24385 GRCh38
+samtools view -b [input.bam] chr1:200010000-200036000 > example.bam
+samtools index example.bam
+
+python ../1.simulate/simulate.py --bam example.bam --varfile out.varfile --simulate > outs/mosaic.features.tsv
+python ../1.simulate/simulate.py --bam example.bam --varfile example.vcf --hom  > outs/hom.features.tsv
+python ../1.simulate/simulate.py --bam example.bam --varfile example.vcf --het  > outs/het.features.tsv
+python ../2.train/train.py --mosaic outs/mosaic.features.tsv --het outs/het.features.tsv --hom outs/hom.features.tsv --nestimators 1 --maxleafnodes 5 --out outs/clf.pkl
+python ../3.classify/classifyAndFilter.py --bam example.bam --bed window.bed --clf outs/clf.pkl
+python ../4.filter/linkageFilter.py --bam example.bam --bed example_scan.tsv --ref /work-zfs/mschatz1/resources/refdata-GRCh38-2.1.0/fasta/genome.fa --vcfavoid example.vcf
+

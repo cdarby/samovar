@@ -1,11 +1,10 @@
 #cdarby@jhu.edu
-#updated 01-24-18
+#updated 05-24-18
 
-#Python 2.7.13 (tested 01-24-18)
-#Python 3.6.2 (tested 01-24-18)
+#Python 2.7.10 / scikit-learn 0.16.1 (tested 05-24-18)
+#Python 3.4.2 / scikit-learn 0.19.1 (tested 05-24-18)
 
 from __future__ import print_function
-
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
@@ -53,6 +52,6 @@ print("Confusion Matrix (class 0=Germline, class 1=Mosaic)")
 #cols are predicted, rows are actual
 print(confusion_matrix(Y,clf.predict(X)))
 print("Feature importances")
-print(zip(clf.feature_importances_,FEATURENAMES))		
+print(sorted(list(zip(clf.feature_importances_,FEATURENAMES))))		
 joblib.dump(clf, args.out) 
 

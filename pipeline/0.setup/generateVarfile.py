@@ -1,20 +1,16 @@
 #cdarby@jhu.edu
-#updated 01-24-18
+#updated 05-23-18
 
-#Python 2.7.13 (tested 01-24-18)
-#Python 3.6.2 (tested 01-24-18)
+#Python 2.7.10 (tested 05-24-18)
+#Python 3.6.2 (tested 05-24-18)
 
-from __future__ import print_function
-
-import argparse,os,sys,random
-from collections import namedtuple
-
+import argparse
 
 parser = argparse.ArgumentParser(description='python generateVarfile.py --out out.varfile --vcf sample.vcf --fai genome.fa.fai --variantspacing 100000 --vafspacing 0.05')
 parser.add_argument('--out', help='Output varfile name',required=False, default="out.varfile")
 parser.add_argument('--vcf', help='Which sites to avoid (takes comma separated multiple file names)',required=False)
 parser.add_argument('--fai', help='fasta file index of the genome to simulate',required=True)
-parser.add_argument('--variantspacing', help='spacing between simulated sites',required=False,default=100000)
+parser.add_argument('--variantspacing', help='spacing between simulated sites',required=False,default=80000)
 parser.add_argument('--vafspacing', help='spacing between variant allele fraction levels',required=False,default=0.05)
 
 args = parser.parse_args()
@@ -27,7 +23,7 @@ if args.vcf != None:
 			line = F.readline().strip().split()
 			while len(line) != 0:
 				if "#" not in line[0]:
-					avoid.add(line[0] + ":" + str(int(line[1])-1)) #offset 1 for "avoid" sites because it's a VCF
+					avoid.add(line[0] + ":" + str(int(line[1])-1)) #offset 1 for "avoid" sites because it's a VCF and the varfile has 0-based coordiantes
 				line = F.readline().strip().split()
 
 vafspacing = float(args.vafspacing)

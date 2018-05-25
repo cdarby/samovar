@@ -2,7 +2,7 @@
 Somatic (mosaic) SNV caller for 10X Genomics data using random forest classification and feature-based filters
 
 Requires: Python 2 or 3 with [pyfaidx](https://github.com/mdshw5/pyfaidx); [scikit-learn](http://scikit-learn.org/); [simplesam](http://simplesam.readthedocs.io/en/latest/); [fisher](https://pypi.org/project/fisher/); and installations of [samtools](http://www.htslib.org/), [bedtools](https://github.com/arq5x/bedtools2/releases). Some steps are compatible with [pypy](https://pypy.org/)  
-[MARCC] The SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N  
+[MARCC](https://www.marcc.jhu.edu/) The SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N  
 
 # Main Pipeline
 

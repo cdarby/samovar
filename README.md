@@ -165,7 +165,7 @@ python cnvnator2bed.py [infile] [outfile] [.fai of genome]
 Converts cnvnator output into a .bed file with +/- 5 buffer around CNV regions
 
 
-#Example
+# Example
 
 ### example/EXAMPLE.txt
 

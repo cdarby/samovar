@@ -155,7 +155,7 @@ python linkageFilter.py --bam sample.bam --bed regionfiltered.tsv --ref genome.f
 * This step takes less than 10 minutes with pypy, 4 processes for 8000 sites.
 * About 4,000-8,000 sites should remain after this step with a probability threshold of 0.05.
 
-#Utilities
+# Utilities
 
 
 ### 0.setup/cnvnator2bed.py
@@ -191,7 +191,7 @@ python ../3.classifyAndFilter/linkageFilter.py --bam example.bam --bed outs/pred
 ```
 
   
-#Experiments
+# Experiments
 
 
 ### experiments/bamsurgeon2vcf.py

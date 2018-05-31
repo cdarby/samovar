@@ -185,7 +185,7 @@ python ../1.simulate/simulate.py --bam example.bam --varfile out.varfile --simul
 python ../1.simulate/simulate.py --bam example.bam --varfile example.vcf --hom  > outs/hom.features.tsv
 python ../1.simulate/simulate.py --bam example.bam --varfile example.vcf --het  > outs/het.features.tsv
 python ../2.train/train.py --mosaic outs/mosaic.features.tsv --het outs/het.features.tsv --hom outs/hom.features.tsv --nestimators 1 --maxleafnodes 5 --out outs/clf.pkl
-python ../3.classifyAndFilter/filter.py --bam example.bam
+python ../3.classifyAndFilter/filter.py --bam example.bam > outs/vectors.txt
 python ../3.classifyAndFilter/classify.py --clf outs/clf.pkl --vectors outs/vectors.txt > outs/predictions.txt
 python ../3.classifyAndFilter/linkageFilter.py --bam example.bam --bed outs/predictions.txt --vcfavoid example.vcf --ref [GRCh38 reference genome FASTA] > outs/finalPredictions.txt
 ```

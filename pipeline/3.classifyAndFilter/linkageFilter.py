@@ -41,11 +41,11 @@ def readVCF(fname):
 	return V
 
 
-def processRegion(R): #samtools format region string
+def processRegion(R): #bed interval -> samtools format region string
 	global fname
 	chrom = R[0]
 	start = int(R[1])
-	r = chrom + ":" + str(start) + "-" + str(start+1)
+	r = chrom + ":" + str(start+1) + "-" + str(start+2) #1-indexed
 	alignments = []
 	alignmentStarts = []
 	alignmentEnds = []
@@ -57,12 +57,18 @@ def processRegion(R): #samtools format region string
 	with open(fname, 'rb') as filenameopen:
 		samfile = simplesam.Reader(filenameopen,regions=r)
 		global fastafname
-		reference = Fasta(fastafname) #This is apparently not thread safe and creating per-process does not cause slowdown
+		reference = Fasta(fastafname) #Fasta() is apparently not "thread safe" to use as global and creating per-process does not affect performance
+		numPhased = 0
 		while True:
 			try: #get next read
 				read = samfile.next()
 				if read.duplicate or not read.passing or read.secondary: continue
 				readNames.append(read.qname)
+				try:
+					HP = read["HP"]
+					numPhased += 1
+				except:
+					HP = None
 				C = read.cigars
 				if C[0][1] == "S":
 					qstart = C[0][0]	
@@ -121,7 +127,11 @@ def processRegion(R): #samtools format region string
 				if not addedBase: basesAtSite.append(1) #read didn't align to that position
 			except StopIteration: #no more reads
 				depth = len(readNames)
-				if depth <= 0: break
+				if depth <= 0: 
+					predictionString = None
+					sys.stderr.write(str(R)+"\n")
+					break
+				fracPhased = 1.0*numPhased/depth
 				totalLen = pileupEnd - pileupStart + 2
 				depthAlt = [0 for _ in range(totalLen)]
 				depthRef = [0 for _ in range(totalLen)]
@@ -153,7 +163,7 @@ def processRegion(R): #samtools format region string
 					if p.two_tail < min_pval:
 						min_pval = p.two_tail
 				if min_pval < MIN_FISHER_PVAL: predictionString = None
-				else: predictionString = ("\t".join(R + [str(min_pval)]))
+				else: predictionString = ("\t".join(R + [str(min_pval),str(fracPhased)]))
 				break
 
 	samfile.close()

@@ -6,6 +6,9 @@ Requires: Python 2 or 3 with [pyfaidx](https://github.com/mdshw5/pyfaidx); [scik
 
 # Main Pipeline
 
+`./samovar.sh`  
+Options: generateVarfile, simulate, train, preFilter, classify, postFilter (run without options to see arguments)
+
 ## 0.setup/generateVarfile.py
 **Generates a tab-separated file with fields** `contig \t site \t VAF` **to specify where mosaic-like sites will be simulated**
 

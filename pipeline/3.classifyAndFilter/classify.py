@@ -32,10 +32,12 @@ with open(args.vectors) as F:
 
 predictionArray = np.empty([len(lines),NFEAT])
 for (i,L) in enumerate(lines):
-	predictionArray[i] = np.array(eval(L)[3:])#field 0 is chrom; field 1 is pos; field 2 is minor allele base; rest are features
-	
+	try:
+        predictionArray[i] = np.array(eval(L)[3:])#field 0 is chrom; field 1 is pos; field 2 is minor allele base; rest are features
+    except SyntaxError: #EOF in middle of file
+        continue
 p = clf.predict_proba(predictionArray)
 for i in range(len(p)):
 	if p[i][1] >= MIN_CLF_SCORE:
 		L = eval(lines[i])
-		print(str(L[0]) + "\t" + str(L[1]) + "\t" + str(L[1]+1) + "\t" + str(p[i][1]) + "\t" + str(L[3]) + "\t" + str(L[8]) + "\t" + str(L[6]) + "\t" + L[2])	#chrom, pos, pos+1, score, depth, nC, MAF
+		print(str(L[0]) + "\t" + str(L[1]) + "\t" + str(L[1]+1) + "\t" + str(p[i][1]) + "\t" + str(L[3]) + "\t" + str(L[8]) + "\t" + str(L[6]) + "\t" + L[2])	#chrom, pos, pos+1, score, depth, nC, MAF, minor allele base

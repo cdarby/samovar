@@ -216,7 +216,11 @@ def processRegion(R):
 				#indel at site in question?
 				(clip,ind,HP,ASXS) = readFeatures(read)
 				gappedSeq = read.gapped('seq')
-				S[1].append(gappedSeq[R[1]-read.pos])
+				try:
+					S[1].append(gappedSeq[R[1]-read.pos])
+				except IndexError:
+					sys.stderr.write(str(R[1]) + "\t" + str(read.pos) + "\n") 
+					return None
 				S[2].append(ord(read.gapped('qual')[R[1]-read.pos])-33)
 				S[3].append(min((len(gappedSeq)-R[1]),R[1])) #not exact due to indel
 				S[4].append(clip)

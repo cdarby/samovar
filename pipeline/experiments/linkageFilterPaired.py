@@ -1,5 +1,5 @@
 #cdarby@jhu.edu
-#updated 10-26-18
+#updated 05-23-18
 
 #Python 2.7.10 (tested 05-24-18)
 #Python 3.4.2 (tested 05-24-18)
@@ -16,6 +16,8 @@ if sys.version_info > (3,0):
 	import _pickle as cPickle
 else:
 	import cPickle
+
+MIN_FISHER_PVAL = 0.05
 
 def readIntervalFile(fname):
 	R = []
@@ -43,7 +45,7 @@ def processRegion(R): #bed interval -> samtools format region string
 	global fname
 	chrom = R[0]
 	start = int(R[1])
-	r = chrom + ":" + str(start+1) + "-" + str(start+2) #simplesam.Reader is 1-indexed
+	r = chrom + ":" + str(start+1) + "-" + str(start+2) #1-indexed
 	alignments = []
 	alignmentStarts = []
 	alignmentEnds = []
@@ -57,14 +59,13 @@ def processRegion(R): #bed interval -> samtools format region string
 		global fastafname
 		reference = Fasta(fastafname) #Fasta() is apparently not "thread safe" to use as global and creating per-process does not affect performance
 		numPhased = 0
-		referenceBase = None
 		while True:
 			try: #get next read
 				read = samfile.next()
 				if read.duplicate or not read.passing or read.secondary: continue
 				readNames.append(read.qname)
 				try:
-					HP = read["HP"]
+					HP = read["PH"]
 					numPhased += 1
 				except:
 					HP = None
@@ -91,7 +92,7 @@ def processRegion(R): #bed interval -> samtools format region string
 				refSeq = reference[R[0]][rstart-1:rend-1].seq.upper()
 				thisReadAln = []
 				P = read.coords #positions in reference for qSeqAln
-				addedBase = False
+				addedBase = False			
 				try:
 					for i in range(len(P)): #position in reference
 						refPos = P[i]
@@ -100,7 +101,6 @@ def processRegion(R): #bed interval -> samtools format region string
 							if i > 0 and refPos-1 != P[i-1] or qChar != refSeq[refPos-rstart]: basesAtSite.append(1)
 							else: basesAtSite.append(0)
 							addedBase = True
-							referenceBase = refSeq[refPos-rstart]
 						elif i > 0 and refPos-1 != P[i-1]:
 							if len(thisReadAln) > 0: thisReadAln[-1] = 1
 							#insertion in query - change previous position in ref.
@@ -141,7 +141,7 @@ def processRegion(R): #bed interval -> samtools format region string
 
 				for (i,seq) in enumerate(alignments):
 					L = len(seq)
-					readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + [1] + seq + [1] + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )] #the 1's surrounding seq indicate the read ends
+					readsAtSite[i] = [0 for _ in range(alignmentStarts[i] - pileupStart)] + [1] + seq + [1] + [0 for _ in range(pileupEnd - alignmentStarts[i] - L )] #the 1's surrounding seq indicate the read ends - hopefully columns are still in line.
 					if basesAtSite[i] == 0:
 						for j in range(-1,L+1): 
 							depthRef[j + alignmentStarts[i] - pileupStart + 1] += 1
@@ -163,10 +163,7 @@ def processRegion(R): #bed interval -> samtools format region string
 					if p.two_tail < min_pval:
 						min_pval = p.two_tail
 				if min_pval < MIN_FISHER_PVAL: predictionString = None
-				# quasi-VCF format
-				else: 
-					INFO = "DP=" + R[4] + ";AF=" + R[6] + ";HDREADS=" + R[5] + ";SAMOVAR=" + R[3] + ";FRACPHASED=" + fracPhased + ";FISHERP=" + min_pval
-					predictionString = ("\t".join([R[0], R[1], ".", referenceBase, R[7], ".", "PASS", INFO]))
+				else: predictionString = ("\t".join(R + [str(min_pval),str(fracPhased)]))
 				break
 
 	samfile.close()
@@ -180,8 +177,6 @@ parser.add_argument('--bed', help='Input bed file name (output from classify)',r
 parser.add_argument('--ref',help="reference genome",required=True)
 parser.add_argument('--vcfavoid',help="VCF of variants to NOT use as linkage",required=False,default=None)
 parser.add_argument('--nproc',help="parallelism",required=False,default=1)
-parser.add_argument('--p',help="minimum Fisher p-value",required=False,default=0.005)
-
 args = parser.parse_args()
 
 regions = readIntervalFile(args.bed)
@@ -193,19 +188,6 @@ else:
 fastafname = args.ref
 fname = args.bam
 NPAR = int(args.nproc)
-MIN_FISHER_PVAL = float(args.p)
-
-print("##fileformat=VCFv4.2")
-print("##source=Samovar")
-print("##reference=" + fastafname)
-print("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
-print("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">")
-print("##INFO=<ID=HDREADS,Number=1,Type=Integer,Description=\"Number of haplotype-discordant reads\">")
-print("##INFO=<ID=SAMOVAR,Number=1,Type=Float,Description=\"Samovar random forest probability\">")
-print("##INFO=<ID=FRACPHASED,Number=1,Type=Float,Description=\"Fraction of reads phased by Longranger\">")
-print("##INFO=<ID=FISHERP,Number=1,Type=Float,Description=\"Minimum Fisher p-value for linkage\">")
-
-print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO")
 
 if NPAR > 1:
 	import multiprocessing as mp

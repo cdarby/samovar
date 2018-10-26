@@ -2,8 +2,8 @@ import pysam,random,sys
 #python subsampleLinkedBam.py [infile] [outfile]
 if len(sys.argv) < 3: sys.exit()
 
-samfile = pysam.AlignmentFile(sys.argv[2], "rb")
-outfile = pysam.AlignmentFile(sys.argv[3],"wb",template=samfile)
+samfile = pysam.AlignmentFile(sys.argv[1], "rb")
+outfile = pysam.AlignmentFile(sys.argv[2],"wb",template=samfile)
 for read in samfile.fetch():
 	if read.has_tag("BX"):
 		t = read.get_tag("BX")

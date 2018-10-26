@@ -75,12 +75,12 @@ python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.fe
 ```
 
 `--mosaic` file from `--simulate` in `1.simulate/simulate.py`  
-`--het` file from `--het` in `1.simulate/simulate.py`  
-`--hom` file from `--simulate` in `1.simulate/simulate.py`   
-Equal number of het and hom examples are randomly selected to give equal number of mosaic and germline training examples.
-`--out` classifier file in Python's pickle binary format [clf.pkl]
-`--mindepth` read coverage required to use a site as a training example [16]  
+`--het` file from `--het` in `1.simulate/simulate.py`   
+`--hom` file from `--simulate` in `1.simulate/simulate.py`   Equal number of het and hom examples are randomly selected to give equal number of mosaic and germline training examples.  
+`--out` classifier file in Python's pickle binary format [clf.pkl]  
+`--mindepth` read coverage required to use a site as a training example [16]    ]
 `--nestimators` [100] `maxleafnodes` [50] scikit-learn random forest hyperparameters  
+`--modelsize` maximum number of mosaic training examples [None: use all data]
 
 **Notes:** 
  
@@ -91,7 +91,7 @@ Equal number of het and hom examples are randomly selected to give equal number 
 **Scans genome, calculates features for sites that pass all filters. Outputs "vectors" for passing sites which will later be classified and ranked by the random forest**
 
 ```
-python classifyAndFilter/filter.py --bam sample.bam --nproc 48 > vectors.txt 2> intervalsComplete.txt
+python filter.py --bam sample.bam --nproc 48 > vectors.txt 2> intervalsComplete.txt
 ```
 
 `--bam` bam file of your sample  
@@ -103,7 +103,7 @@ python classifyAndFilter/filter.py --bam sample.bam --nproc 48 > vectors.txt 2> 
 * Records are printed to stdout, the output order may not be in order along the genome if multiple processes are used 
 * Regions are printed to stderr when they are completed.
 * To decrease memory usage at possible loss of speed, decrease the "performance parameters" in the script. WINDOW\_SIZE is the number of bases each task scans at a time. READBATCH and SITEBATCH control how often the main data structure is pruned.    
-* To adjust filter thresholds, change the "filter parameters" in the script. To consider sites with more (less) evidence of mosaicism, increase (decrease) MIN\_MAF and MIN\_HAPDISCORD\_READS. To consider sites with more (less) phased reads, increase (decrease) MIN\_FRAC\_PHASED. To consider sites with higher (lower) quality phasing, increase (decrease) MIN_FRAC_HAP1, the haplotype imbalance of all phased reads, and decrease (increase) MAX\_HAPDISCORD\_READS\_HAP, the haplotype imbalance of haplotype-discordant reads.  
+* To adjust filter thresholds, change the "filter parameters" in the script. To consider sites with more (less) evidence of mosaicism, increase (decrease) MIN\_MAF and MIN\_HAPDISCORD\_READS. To consider sites with more (less) phased reads, increase (decrease) MIN\_FRAC\_PHASED. To consider sites with higher (lower) quality phasing, increase (decrease) MIN\_FRAC\_HAP1, the haplotype imbalance of all phased reads, and decrease (increase) MAX\_HAPDISCORD\_READS\_HAP, the haplotype imbalance of haplotype-discordant reads.  
 * If you want to include any contigs besides the autosomes and chrX, add the names to the CONTIGS list. (if the sample is male, the reads on chrX will not have the HP tag from longranger and no calls will be made) 
 * Processes have been observed that use >100G of memory on a single interval, and this has not yet been investigated and solved. [MARCC] Use SLURM `--partition=lrgmem --nodes=1 --ntasks-per-node=48 --mem=800G --time=12:0:0` which takes 3-5 hours to scan the whole genome, producing 50,000-100,000 candidate vectors (30-70MB output file).  
 
@@ -141,7 +141,7 @@ bedtools intersect -v -a predictions.tsv -b repeatsb37.bed | bedtools intersect 
 * About 5,000-10,000 sites should remain after this step.
 
 ## 3.classifyAndFilter/linkageFilter.py
-**Calculates (and appends to output line) the minimum Fisher score for association between minor allele reads and mismatches, indels, or alignment endpoints**
+**Calculates the minimum Fisher score for association between minor allele reads and mismatches, indels, or alignment endpoints**
 
 ```
 python linkageFilter.py --bam sample.bam --bed regionfiltered.tsv --ref genome.fa --vcfavoid sample.vcf --nproc 4 > predictionsFinal.tsv
@@ -150,11 +150,12 @@ python linkageFilter.py --bam sample.bam --bed regionfiltered.tsv --ref genome.f
 `--bam` BAM file of your sample   
 `--bed` variant calls  
 `--vcfavoid` VCF of sites NOT to consider for possible linkage (i.e. VCF from your sample)  
-`--ref` reference genome FASTA  
+`--ref` reference genome FASTA   
+`--p` minimum Fisher p-value to report - default 0.005 
 
 **Notes:**  
 
-* Change MIN\_FISHER\_PVAL to adjust the threshold below which sites will be rejected.  
+* Change `--p` to adjust the threshold below which sites will be rejected.  
 * This step takes less than 10 minutes with pypy, 4 processes for 8000 sites.
 * About 4,000-8,000 sites should remain after this step with a probability threshold of 0.05.
 
@@ -201,13 +202,13 @@ python ../3.classifyAndFilter/linkageFilter.py --bam example.bam --bed outs/pred
 ```
 python bamsurgeon2vcf.py < [infile]
 ```
-Converts bamsurgeon logfile output into a minimal .vcf file with genotype 0|0 to be used with `simulate.py --hom` 
+Converts bamsurgeon logfile output into a minimal .vcf file with genotype 0|0 to be used with `simulate.py --hom` to calculate features at these sites  
 
 ### experiments/subsampleLinkedBam.py
 ```
 python subsampleLinkedBam.py [infile] [outfile]
 ```
-Subsamples half of the barcodes in the file (BX tag)
+Subsamples half of the barcodes in the file (BX tag); uses pysam
 
 ### experiments/pairedTagBam.py
 ```
@@ -221,10 +222,10 @@ Based on phased VCF, annotates reads in bam file with PH tag of 1 or 2 if it or 
 
 ### experiments/simulatePaired.py
 ```
-python simulatePaired.py --bam sample.bam --varfile out.varfile --simulate --nproc 8 --subsample 0.5 > mosaic.features.tsv
+python simulatePaired.py --bam sample.bam --varfile out.varfile --simulate --nproc 8 > mosaic.features.tsv
 ```
 
-Substitutes PH for HP tag and doesn't produce the ASXS features.  
+Substitutes PH for HP tag and doesn't produce the ASXS features. Also has hom; het modes.  
 
 
 ### experiments/simulateSubsample.py
@@ -242,20 +243,31 @@ python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.fe
 
 Trains random forest only on features that have no phasing information by subsetting the feature vector   
 
-### experiments/classifyAndFilterUnphased.py
+### experiments/filterUnphased.py
 ```
-python classifyAndFilterUnphased.py --bam sample.bam --bed genome.bed --clf clf.pkl --nproc 8 > scan.tsv
-```
-
-Classifies and filters based on model trained with no phasing information   
-
-### experiments/classifyAndFilterPaired.py
-```
-python classifyAndFilterPaired.py --bam sample.bam --bed genome.bed --clf clf.pkl --nproc 8 > scan.tsv
+python filterUnphased.py --bam sample.bam --nproc 8 > vectors.txt 2> intervalsComplete.txt
 ```
 
-Classifies and filters based on model trained with phasing computed using paired-end reads   
+Filters using no phasing information   
 
+### experiments/filterPaired.py
+```
+python filterPaired.py --bam sample.bam --nproc 8 > vectors.txt 2> intervalsComplete.txt
+```
+
+Filters using phasing computed using paired-end reads   
+
+### experiments/classifyUnphased.py
+```
+python classifyUnphased.py --clf clf.pkl --vectors vectors.txt > predictions.tsv
+```
+
+Output line: chrom, pos, pos+1, score, depth, MAF
+
+### experiments/linkageFilterPaired.py  
+```
+python linkageFilterPaired.py --bam sample.bam --bed regionfiltered.tsv --ref genome.fa --vcfavoid sample.vcf --nproc 4 > predictionsFinal.tsv
+```
 
 ### experiments/comparisonTables.R
 

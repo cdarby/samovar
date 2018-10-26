@@ -131,7 +131,7 @@ def processRegion(R): #bed interval -> samtools format region string
 					predictionString = None
 					sys.stderr.write(str(R)+"\n")
 					break
-				fracPhased = 1.0*numPhased/depth
+				fracPhased = str(round(1.0*numPhased/depth,5))
 				totalLen = pileupEnd - pileupStart + 2
 				depthAlt = [0 for _ in range(totalLen)]
 				depthRef = [0 for _ in range(totalLen)]
@@ -165,7 +165,7 @@ def processRegion(R): #bed interval -> samtools format region string
 				if min_pval < MIN_FISHER_PVAL: predictionString = None
 				# quasi-VCF format
 				else: 
-					INFO = "DP=" + R[4] + ";AF=" + R[6] + ";HDREADS=" + R[5] + ";SAMOVAR=" + R[3] + ";FRACPHASED=" + fracPhased + ";FISHERP=" + min_pval
+					INFO = "DP=" + R[4] + ";AF=" + str(round(float(R[6]),5)) + ";HDREADS=" + R[5] + ";SAMOVAR=" + R[3] + ";FRACPHASED=" + fracPhased + ";FISHERP=" + str(round(min_pval,5))
 					predictionString = ("\t".join([R[0], R[1], ".", referenceBase, R[7], ".", "PASS", INFO]))
 				break
 

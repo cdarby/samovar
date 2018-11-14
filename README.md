@@ -1,5 +1,14 @@
-# samovar
-Somatic (mosaic) SNV caller for 10X Genomics data using random forest classification and feature-based filters
+<p align="center">
+<img src="resources/icon.png"/>
+</p>
+
+**Samovar** is a mosaic SNV caller for 10x Genomics linked-read WGS data. Starting from the [phased VCF](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/output/vcf) and [BAM](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/output/bam) files output by [10x Genomics Longranger pipeline](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger), Samovar first selects candidate variant sites by filtering sites based on features of the aligned reads, such as the depth of coverage, that contribute to false positive variant calls (1). A [random forest tree model](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#) is trained (3) with simulated mosaic variants as positive examples (2) and real homozygous/heterozygous variants (2) called in the sample by Longranger as negative examples. Candidate variant sites are scored with this model (4). Repeat regions and non-diploid copy-number regions are optionally filtered out (5) before a final filter removes false positives resulting from alignment errors (6) to produce scored variant calls (7).  
+
+<p align="center">
+  <img src="resources/samovar_wf.png"/>
+</p>
+
+# Dependencies and Configuration
 
 Requires: Python 2 or 3 with [pyfaidx](https://github.com/mdshw5/pyfaidx); [scikit-learn](http://scikit-learn.org/); [simplesam](http://simplesam.readthedocs.io/en/latest/); [fisher](https://pypi.org/project/fisher/); and installations of [samtools](http://www.htslib.org/), [bedtools](https://github.com/arq5x/bedtools2/releases). Some steps are compatible with [pypy](https://pypy.org/)  
 [MARCC](https://www.marcc.jhu.edu/) The SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N  

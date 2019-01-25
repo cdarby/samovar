@@ -10,19 +10,26 @@
 
 # Dependencies and Configuration
 
-Requires: Python 2 or 3 with [pyfaidx](https://github.com/mdshw5/pyfaidx); [scikit-learn](http://scikit-learn.org/); [simplesam](http://simplesam.readthedocs.io/en/latest/); [fisher](https://pypi.org/project/fisher/); and installations of [samtools](http://www.htslib.org/), [bedtools](https://github.com/arq5x/bedtools2/releases). Some steps are compatible with [pypy](https://pypy.org/)  
+Requires: Python (v.3 recommended, v.2 compatible) with [pyfaidx](https://github.com/mdshw5/pyfaidx); [scikit-learn](http://scikit-learn.org/); [simplesam](http://simplesam.readthedocs.io/en/latest/); [fisher](https://pypi.org/project/fisher/); and installations of [samtools](http://www.htslib.org/), [bedtools](https://github.com/arq5x/bedtools2/releases). Some steps are compatible with [pypy](https://pypy.org/)  
 [MARCC](https://www.marcc.jhu.edu/) The SLURM sbatch parameter --ntasks N should be set to accompany Python script parameter --nproc N  
+
+# Installation
+
+* Change the INSTALLDIR, PYTHONCMD, and PYPYCMD variables in the file to match the location of the Samovar code and the command-line invocations of Python and pypy you wish to use. If you do not have pypy, just set PYPYCMD to the Python command-line invocation.  
+* The `./samovar` file can then be moved to your `/bin/` directory, or you can add the location to the PATH variable.  
+* Download the region filter BED files [here](http://labshare.cshl.edu/shares/schatzlab/www-data/samovar/)
+* Install required packages: `pip install -r requirements.txt`
 
 # Main Pipeline
 
-`./samovar.sh`  
-Options: generateVarfile, simulate, train, preFilter, classify, postFilter (run without options to see arguments)
+`./samovar`  
+Options: generateVarfile, simulate, train, preFilter, classify, postFilter (run without options to see arguments)  
 
-## 0.setup/generateVarfile.py
+## samovar generateVarfile
 **Generates a tab-separated file with fields** `contig \t site \t VAF` **to specify where mosaic-like sites will be simulated**
 
 ```
-python generateVarfile.py --out out.varfile --vcf sample.vcf --fai genome.fa.fai
+samovar generateVarfile --out out.varfile --vcf sample.vcf --fai genome.fa.fai
 ```  
 
 `--out` output varfile name [out.varfile]  
@@ -38,11 +45,11 @@ python generateVarfile.py --out out.varfile --vcf sample.vcf --fai genome.fa.fai
 *  If you do not want to use miscellaneous contigs and/or sex chromosomes, make a new file for the `--fai` argument that contains only the contigs you want to use for mosaic-like sites.
 
 
-## 1.simulate/simulate.py
+## samovar simulate
 **Simulates mosaic-like training examples at sites specified in varfile where there is at least one haplotype-discordant read**
 
 ```
-python simulate.py --bam sample.bam --varfile out.varfile --simulate --nproc 4 > mosaic.features.tsv
+samovar simulate --bam sample.bam --varfile out.varfile --simulate --nproc 4 > mosaic.features.tsv
 ```
 
 `--simulate` mosaic site simulation mode  
@@ -59,7 +66,7 @@ python simulate.py --bam sample.bam --varfile out.varfile --simulate --nproc 4 >
 **Computes features at known homozygous/heterozygous sites from VCF that have at least one haplotype-discordant read**  
 
 ```
-python simulate.py --bam sample.bam --varfile sample.vcf --het --max 50000 --nproc 4 > het.features.tsv
+samovar simulate --bam sample.bam --varfile sample.vcf --het --max 50000 --nproc 4 > het.features.tsv
 ```
 
 `--het` will extract features from sites with genotype `1|0\|0|1` that PASS filter and are SNP [i.e. len(ref) == 1 and len(alt) == 1]  
@@ -76,11 +83,11 @@ Must catch output from stdout.
 * Based on the number of mosaic-like sites, you should set --max to half that number in each of --hom and --het mode.  
 * Because more sites must be examined to find enough examples with haplotype-discordant reads, with pypy, 4 processes, and --max 15000, this step takes 30-90 minutes for modes --het and --hom. (SLURM shared partition default memory 5G/task is sufficient)  
  
-## 2.train/train.py
+## samovar train
 **Uses feature vectors from mosaic-like, heterozygous, and homozygous sites to train a random forest classifier**
 
 ```
-python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.features.tsv
+samovar train --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.features.tsv
 ```
 
 `--mosaic` file from `--simulate` in `1.simulate/simulate.py`  
@@ -96,11 +103,11 @@ python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.fe
 * Ensure that the python and scikit-learn versions used to train and dump the classifier are the same as used to load and use the classifier later on.
 * This step should just take a few minutes, and is not parallelized or pypy-compatible.
 
-## 3.classifyAndFilter/filter.py
+## samovar preFilter
 **Scans genome, calculates features for sites that pass all filters. Outputs "vectors" for passing sites which will later be classified and ranked by the random forest**
 
 ```
-python filter.py --bam sample.bam --nproc 48 > vectors.txt 2> intervalsComplete.txt
+samovar preFilter --bam sample.bam --nproc 48 > vectors.txt 2> intervalsComplete.txt
 ```
 
 `--bam` bam file of your sample  
@@ -116,11 +123,11 @@ python filter.py --bam sample.bam --nproc 48 > vectors.txt 2> intervalsComplete.
 * If you want to include any contigs besides the autosomes and chrX, add the names to the CONTIGS list. (if the sample is male, the reads on chrX will not have the HP tag from longranger and no calls will be made) 
 * Processes have been observed that use >100G of memory on a single interval, and this has not yet been investigated and solved. [MARCC] Use SLURM `--partition=lrgmem --nodes=1 --ntasks-per-node=48 --mem=800G --time=12:0:0` which takes 3-5 hours to scan the whole genome, producing 50,000-100,000 candidate vectors (30-70MB output file).  
 
-## 3.classifyAndFilter/classify.py
+## samovar classify
 **Uses the random forest model to rank the feature vectors, outputting those with a higher-than-threshold probability in an output file with format:** `contig \t position \t position+1 \t Samovar score \t read depth \t Number of haplotype discordant read \t MAF \t minor allele base`
 
 ```
-python classify.py --clf clf.pkl --vectors vectors.txt > predictions.tsv
+samovar classify --clf clf.pkl --vectors vectors.txt > predictions.tsv
 ```
 
 `--clf` classifier trained from 2.train/train.py  
@@ -136,7 +143,7 @@ python classify.py --clf clf.pkl --vectors vectors.txt > predictions.tsv
 * Decrease (set to 0) MIN\_CLF\_SCORE to output more (all) of the sites.  
 * About 20,000-30,000 sites should remain after this step with a probability threshold of 0.9.
 
-## Use bedtools to apply blacklist region filters
+## Use bedtools to apply region filters
 **Filter out simple repeats and CNV**
 
 ```
@@ -149,11 +156,11 @@ bedtools intersect -v -a predictions.tsv -b repeatsb37.bed | bedtools intersect 
 * This step should only take a few minutes but because there are so many intervals of simple repeats, the memory consumption could be up to 30G unless both files are sorted and the `-sorted` flag is used in `bedtools intersect`.  
 * About 5,000-10,000 sites should remain after this step.
 
-## 3.classifyAndFilter/linkageFilter.py
+## samovar postFilter
 **Calculates the minimum Fisher score for association between minor allele reads and mismatches, indels, or alignment endpoints**
 
 ```
-python linkageFilter.py --bam sample.bam --bed regionfiltered.tsv --ref genome.fa --vcfavoid sample.vcf --nproc 4 > predictionsFinal.tsv
+samovar postFilter --bam sample.bam --bed regionfiltered.tsv --ref genome.fa --vcfavoid sample.vcf --nproc 4 > predictionsFinal.tsv
 ```
 
 `--bam` BAM file of your sample   
@@ -206,78 +213,6 @@ python ../3.classifyAndFilter/linkageFilter.py --bam example.bam --bed outs/pred
   
 # Experiments
 
-
-### experiments/bamsurgeon2vcf.py
-```
-python bamsurgeon2vcf.py < [infile]
-```
-Converts bamsurgeon logfile output into a minimal .vcf file with genotype 0|0 to be used with `simulate.py --hom` to calculate features at these sites  
-
-### experiments/subsampleLinkedBam.py
-```
-python subsampleLinkedBam.py [infile] [outfile]
-```
-Subsamples half of the barcodes in the file (BX tag); uses pysam
-
-### experiments/pairedTagBam.py
-```
-python pairedTagBam.py --bam sample.bam --out paired.bam --vcf sample.vcf
-```
-Based on phased VCF, annotates reads in bam file with PH tag of 1 or 2 if it or mate can be phased.  
-`--bam` bam file with paired-end reads  
-`--vcf` phased VCF (GT 0|1\|1|0)  
-`--out` output bam file with PH tags  
+Scripts related to experiments in the forthcoming Samovar publication.
 
 
-### experiments/simulatePaired.py
-```
-python simulatePaired.py --bam sample.bam --varfile out.varfile --simulate --nproc 8 > mosaic.features.tsv
-```
-
-Substitutes PH for HP tag and doesn't produce the ASXS features. Also has hom; het modes.  
-
-
-### experiments/simulateSubsample.py
-```
-python simulateSubsample.py --bam sample.bam --varfile out.varfile --simulate --nproc 8 --subsample 0.5 > mosaic.features.tsv
-```
-
-`--subsample` fraction of depth to retain  
-
-
-### experiments/trainUnphased.py
-```
-python train.py --mosaic mosaic.features.tsv --het het.features.tsv --hom hom.features.tsv
-```
-
-Trains random forest only on features that have no phasing information by subsetting the feature vector   
-
-### experiments/filterUnphased.py
-```
-python filterUnphased.py --bam sample.bam --nproc 8 > vectors.txt 2> intervalsComplete.txt
-```
-
-Filters using no phasing information   
-
-### experiments/filterPaired.py
-```
-python filterPaired.py --bam sample.bam --nproc 8 > vectors.txt 2> intervalsComplete.txt
-```
-
-Filters using phasing computed using paired-end reads   
-
-### experiments/classifyUnphased.py
-```
-python classifyUnphased.py --clf clf.pkl --vectors vectors.txt > predictions.tsv
-```
-
-Output line: chrom, pos, pos+1, score, depth, MAF
-
-### experiments/linkageFilterPaired.py  
-```
-python linkageFilterPaired.py --bam sample.bam --bed regionfiltered.tsv --ref genome.fa --vcfavoid sample.vcf --nproc 4 > predictionsFinal.tsv
-```
-
-### experiments/comparisonTables.R
-
-Figures

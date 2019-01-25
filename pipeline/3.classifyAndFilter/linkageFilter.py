@@ -61,7 +61,7 @@ def processRegion(R): #bed interval -> samtools format region string
 		while True:
 			try: #get next read
 				read = samfile.next()
-				if read.duplicate or not read.passing or read.secondary: continue
+				if len(read) == 0 or read.duplicate or not read.passing or read.secondary: continue
 				readNames.append(read.qname)
 				try:
 					HP = read["HP"]

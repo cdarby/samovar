@@ -212,7 +212,7 @@ def processRegion(R):
 		while True:
 			try: #get next read
 				read = samfile.next()
-				if read.duplicate or not read.passing or read.secondary: continue
+				if read.duplicate or not read.passing or read.secondary or not read.mapped: continue
 				#indel at site in question?
 				(clip,ind,HP,ASXS) = readFeatures(read)
 				gappedSeq = read.gapped('seq')

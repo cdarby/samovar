@@ -1,0 +1,30 @@
+#!/bin/sh
+
+INSTALLDIR="."
+PYTHONCMD="python"
+PYPYCMD="pypy"
+
+case "$1" in
+  "generateVarfile")
+    ${PYTHONCMD} ${INSTALLDIR}/pipeline/0.setup/generateVarfile.py "${@:2}"
+    ;;
+   "simulate")
+    ${PYPYCMD} ${INSTALLDIR}/pipeline/1.simulate/simulate.py "${@:2}"
+    ;;
+  "train")
+    ${PYTHONCMD} ${INSTALLDIR}/pipeline/2.train/train.py "${@:2}"
+    ;;
+  "preFilter")
+    ${PYPYCMD} ${INSTALLDIR}/pipeline/3.classifyAndFilter/filter.py "${@:2}"
+    ;;
+  "classify")
+    ${PYTHONCMD} ${INSTALLDIR}/pipeline/3.classifyAndFilter/classify.py "${@:2}"
+    ;;
+  "postFilter")
+    ${PYPYCMD} ${INSTALLDIR}/pipeline/3.classifyAndFilter/linkageFilter.py "${@:2}"
+    ;;
+  *)
+    echo "Options: generateVarfile, simulate, train, preFilter, classify, postFilter (run without options to see arguments)"
+    exit 1
+    ;;
+esac

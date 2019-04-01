@@ -15,7 +15,7 @@ Requires: Python (v.3 recommended, v.2 compatible) with [pyfaidx](https://github
 
 # Installation
 
-* Change the INSTALLDIR, PYTHONCMD, and PYPYCMD variables in the file to match the location of the Samovar code and the command-line invocations of Python and pypy you wish to use. If you do not have pypy, just set PYPYCMD to the Python command-line invocation.  
+* Change the INSTALLDIR, PYTHONCMD, and PYPYCMD variables in the `./samovar` file to match the location of the Samovar code and the command-line invocations of Python and pypy you wish to use. If you do not have pypy, just set PYPYCMD to the Python command-line invocation.  
 * The `./samovar` file can then be moved to your `/bin/` directory, or you can add the location to the PATH variable.  
 * Download the region filter BED files [here](http://labshare.cshl.edu/shares/schatzlab/www-data/samovar/)
 * Install required packages: `pip install -r requirements.txt`
